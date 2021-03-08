@@ -3,7 +3,6 @@ module ParameterInference
 include("Windows.jl")
 include("FeatureRepresentations.jl")
 include("Normalisation.jl")
-include("Filter.jl")
 include("LowDimensionalProjections.jl")
 
 
