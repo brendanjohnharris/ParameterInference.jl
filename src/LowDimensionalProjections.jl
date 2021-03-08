@@ -40,8 +40,8 @@ export explainedVariance
 # ------------------------------------------------------------------------------------------------ #
 function residualVariance(dF::Array{Float64, 2}, dD::Array{Float64, 2})
     # Calculate a distance matrix for F and D, and correlate them
-    σ² = 1-cor(dF[:], dD[:])
-    # Sqrt of 1 minus the correlation between features and the low dimensional projections
+    σ² = 1 - (cor(dF[:], dD[:]))^2
+    # Sqrt of 1 minus the correlation between distances in feature space and the low dimensional space, squared
 end
 
 function residualVariance(M, F::Array{Float64, 2}, nPCs::Int64)
