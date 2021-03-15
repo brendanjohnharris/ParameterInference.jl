@@ -2,7 +2,6 @@ using NonstationaryProcesses
 using Catch22
 using MultivariateStats
 using Plots
-plotlyjs()
 
 # Will need to work through this script to add convenience functions, plot recipes and fix nasty types (catch22)
 

@@ -2,7 +2,6 @@ using NonstationaryProcesses
 using Catch22
 using MultivariateStats
 using Plots
-gr()
 
 # Will need to work through this script to add convenience functions, plot recipes and fix nasty types (catch22)
 
@@ -16,20 +15,20 @@ p1 = plot(x, xlabel="t", label=nothing, title="Time series")
 X = slidingWindow(x, 500, 0, rect)
 
 # Feature transformation
-F = Array{Float64}(catch22(X)) # Will need to find an alternative to NamedArrays later, and make catch22 output type homogeneous to Float64
+F = catch22(X) # Will need to find an alternative to NamedArrays later, and make catch22 output type homogeneous to Float64
 
 # Preprocessing
 F = zscore(F)
 F = nonanrows(F)
 
 # Projection
-M = project(F, principalComponents)
+M = project(Array(F), principalComponents)
 
 # Estimate # params
 σ² = residualVariance(M, F)
 ξ² = explainedVariance(M)
 
-p2 = plot(plot(1:length(σ²), σ², seriestype=:line, seriescolor=:black, markersize=5, marker=:circle, label=nothing, ylabel="Residual Variance", xlabel="# PCs"), plot(1:length(ξ²), ξ², seriestype=:line, seriescolor=:red, markersize=5, marker=:circle, label=nothing, ylabel="Prop. Explained Variance", xlabel="# PCs"))
+p2 = plot(plot(0:length(σ²), [1, σ²...], seriestype=:line, seriescolor=:black, markersize=5, marker=:circle, label=nothing, ylabel="Residual Variance", xlabel="# PCs"), plot(0:length(ξ²), [0, ξ²...], seriestype=:line, seriescolor=:red, markersize=5, marker=:circle, label=nothing, ylabel="Prop. Explained Variance", xlabel="# PCs"))
 
 
 # Plot parameter estimate/s
@@ -46,3 +45,5 @@ plot!(dasht, unitInterval(p(t)), seriescolor=:red, label="True")
 # Plot trajectory in first two PCs
 ps2 = embed(M, F, 1:2)
 #plot(ps2[1, :], ps2[:, 2], seriestype=:scatter, marker_z=unitInterval(p(t)))
+
+

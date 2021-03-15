@@ -41,6 +41,11 @@ export unitInterval
 # ------------------------------------------------------------------------------------------------ #
 
 function nonanrows(F::AbstractArray)
-    F[collect(.!any(isnan.(F), dims=2))[:], :]
+    idxs = any(isnan.(Array(F)), dims=2)
+    if any(idxs)
+        @warn "$(+(idxs...)) NaN rows are being removed" # Maybe more detail?
+        return F[collect(.!idxs)[:], :]
+    end
+    return F
 end
 export nonanrows

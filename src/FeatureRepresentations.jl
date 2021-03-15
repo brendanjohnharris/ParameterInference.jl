@@ -1,7 +1,7 @@
 using Catch22
-using NamedArrays
 
 
-function features(X, featureFunc)
+function featureRepresentation(X, featureFunc::Function)
     F = featureFunc(X)
 end
+export featureRepresentation
