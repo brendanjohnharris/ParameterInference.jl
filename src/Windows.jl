@@ -2,12 +2,16 @@
 #                                        Windowing functions                                       #
 # ------------------------------------------------------------------------------------------------ #
 
-function slidingWindow(x::Vector, width::Int, overlap::Int, windowFunc::Function=rect)
+function slidingWindow(x::AbstractVector, width::Int=length(x)÷(21-!iseven(length(x)÷21)), overlap::Int=0, windowFunc::Function=rect)
     # windowFunc must be vectorised
     # Construct sub-timeseries
     X = hcat([x[Array(1:width).+a] for a in 0:(width-overlap):(length(x)-width)]...)
+    idxs = 1:size(X, 1):(size(X, 2)*size(X, 1)+1)
     # Apply the window function to each sub-series
-    mapslices(windowFunc, X, dims=1)
+    (mapslices(windowFunc, X, dims=1), idxs)
+end
+function slidingWindow(width::Int, args...)
+    f(x) = slidingWindow(x, width, args...)
 end
 export slidingWindow
 
@@ -17,5 +21,5 @@ export slidingWindow
 # ------------------------------------------------------------------------------------------------ #
 #                                         Window functions                                         #
 # ------------------------------------------------------------------------------------------------ #
-rect(x::Vector) = x
+rect(x::AbstractVector) = x
 export rect
