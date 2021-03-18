@@ -27,7 +27,7 @@ Base.@kwdef struct Inference
 end
 export Inference
 
-function infer(x::AbstractVector; windows::Function=slidingWindow, features::Function=catch22, normalisation::Function=nonanrows∘zscore, dimensionalityReduction::Function=principalComponents, parameters=x.+NaN)
+function infer(x::AbstractVector; windows::Function=slidingWindow, features::Function=catch22, normalisation::Function=nonanrows∘standardise, dimensionalityReduction::Function=principalComponents, parameters=x.+NaN)
 
     X, windowIdxs = windows(x)
     F = features(X)

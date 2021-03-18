@@ -22,7 +22,7 @@ X = slidingWindow(x, 5000, 0, rect)
 F = Array{Float64}(catch22(X)) # Will need to find an alternative to NamedArrays later, and make catch22 output type homogeneous to Float64
 
 # Preprocessing
-F = zscore(F)
+F = standardise(F)
 F = nonanrows(F)
 
 # Projection

@@ -2,6 +2,38 @@ using Plots
 using DimensionalData
 import StatsBase
 
+
+# ------------------------------------------------------------------------------------------------ #
+#                                       Plot a feature matrix                                      #
+# ------------------------------------------------------------------------------------------------ #
+# @recipe function f(::Type{Val{:featurematrix}}, x, y, z)
+#     # seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
+#     #yticks := nothing
+#     #colorbar --> nothing
+#     # xticks := (x, string.(x))
+#     # yticks := (y, string.(y))
+#     seriestype := :heatmap
+#     x := x
+#     y := y
+#     z := z
+#     #(x, y, z)
+#     ()
+# end
+
+# @recipe function f(fm::Type{Val{:featurematrix}}, F::DimArray, args...)
+#     seriestype := featurematrix
+#     features := String.(dims(F, :feature).val)
+#     timeseries := String.(dims(F, :timeseries).val)
+#     F --> Array(F)
+#     ()
+# end
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                        Plot inference (consider changing to series recipe)                       #
+# ------------------------------------------------------------------------------------------------ #
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
 @recipe function f(I::Inference)
