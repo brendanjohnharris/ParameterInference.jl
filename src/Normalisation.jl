@@ -4,14 +4,6 @@ using StatsBase
 #                             Functions for normalising feature vectors                            #
 # ------------------------------------------------------------------------------------------------ #
 
-standardise(x::AbstractVector{Float64}, μ::Float64=mean(x), σ::Float64=std(x)) = (x .- μ)./(σ)
-standardise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim) # Normalise rows i.e. feature vectors
-# function standardise!(X::AbstractArray{Float64, 2})
-#     X = standardise(X)
-# end
-export standardise, standardise!
-
-
 
 # ------------------------------------- General normalisation ------------------------------------ #
 tanh(x::Number, centre::Number=0, scale::Number=1) = Base.tanh(x - centre)*scale; export tanh
@@ -26,6 +18,21 @@ function normalise(X::AbstractArray, f::Function=standardise, dim::Int=2, args..
 end
 export normalise
 
+unitInterval(x::AbstractVector{Float64}) = normalise(x, standardise, min(x...), abs(-(extrema(x)...)))
+unitInterval(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+export unitInterval
+
+standardise(x::AbstractVector{Float64}, args...) = normalise(x, standardise, args...)
+standardise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+export standardise
+
+sigmoidNormalise(x::AbstractVector{Float64}, args...) = normalise(x, logistic, args...)
+sigmoidNormalise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(sigmoidNormalise, X, dims=dim)
+export sigmoidNormalise
+
+
+
+
 
 function robustNormalise(x::AbstractVector, f::Function=standardise, μ::Number=median(x), σ::Number=iqr(x))
     y = f.(x, μ, σ/1.35)
@@ -35,6 +42,13 @@ function robustNormalise(X::AbstractArray, f::Function=standardise, dim::Int=2, 
 end
 export robustNormalise
 
+robustStandardise(x::AbstractVector{Float64}, args...) = robustNormalise(x, standardise, args...)
+robustStandardise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+export robustStandardise
+
+robustSigmoidNormalise(x::AbstractVector{Float64}, args...) = robustNormalise(x, logistic, args...)
+robustSigmoidNormalise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(robustSigmoidNormalise, X, dims=dim)
+export robustSigmoidNormalise
 
 # ------------------------------------ Scale to L1 unit vector ----------------------------------- #
 unitL1(x::AbstractVector{Float64}) = x./sum(x)
@@ -43,12 +57,12 @@ export unitL1
 
 
 # ------------------------------------ Scale to unit interval ------------------------------------ #
-function unitInterval(x::AbstractVector{Float64})
-    y = x .- min(x...)
-    y = y./max(y...)
-end
-unitInterval(X::AbstractArray{Float64, 2}) = mapslices(unitInterval, X, dims=2)
-export unitInterval
+# function unitInterval(x::AbstractVector{Float64})
+#     y = x .- min(x...)
+#     y = y./max(y...)
+# end
+# unitInterval(X::AbstractArray{Float64, 2}) = mapslices(unitInterval, X, dims=2)
+# export unitInterval
 
 
 
