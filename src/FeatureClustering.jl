@@ -10,21 +10,29 @@ function clusterDistances(D::AbstractMatrix; linkageMetric::Symbol=:average, bra
     order = h.order
 end
 
-function clusterColumns(X::AbstractMatrix, distanceMetric=Distances.CorrDist(); dim=2, kwargs...)
+function clusterPairwise(X::AbstractMatrix, distanceMetric=Distances.CorrDist(); dim=2, kwargs...)
     D = pairwise(distanceMetric, X, dims=dim)
     clusterDistances(D; kwargs...)
 end
 
-function clusterReorder(X::AbstractMatrix, distanceMetric=Distances.CorrDist(); kwargs...)
-    idxs = clusterColumns(X, distanceMetric; kwargs...)
-    X[:, idxs] # Orders columns by default
+function clusterReorder(X::AbstractMatrix, distanceMetric=Distances.CorrDist(); dim=1, kwargs...)
+    idxs = clusterPairwise(X, distanceMetric; dim=dim, kwargs...)
+    if dim==2
+        X[:, idxs] # Orders columns by default
+    elseif dim==1
+        X[idxs, :]
+    end
 end
 
-function clusterReorder(X::AbstractMatrix, D::AbstractMatrix; kwargs...)
+function clusterReorder(X::AbstractMatrix, D::AbstractMatrix; dim=2, kwargs...)
     idxs = clusterDistances(D; kwargs...)
-    X[:, idxs] # Orders columns by default
+    if dim==2
+        X[:, idxs] # Orders columns by default
+    elseif dim==1
+        X[idxs, :]
+    end
 end
 
 export clusterDistances
-export clusterColumns
+export clusterPairwise
 export clusterReorder
