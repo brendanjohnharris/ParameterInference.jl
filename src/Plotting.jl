@@ -36,7 +36,9 @@ import StatsBase
 # ------------------------------------------------------------------------------------------------ #
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
-@recipe function f(I::Inference)
+@userplot ParameterEstimate
+@recipe function f(P::ParameterEstimate)
+    I = P.args[1]
     legend --> false
     #link := :x
     grid --> false
@@ -68,9 +70,18 @@ import StatsBase
         seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
         yticks := nothing
         F = I.normalisation(I.F)
-        clusterF = clusterReorder(Array(F)', CorrDist(), linkageMetric=:average, branchOrder=:optimal)' # clusterReorder clusters columns so transpose and transpose again
+
+        clusterF = clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
+
+        # D = 1.0.-abs.(StatsBase.corspearman(F'))
+        # clusterF = clusterReorder(Array(F), D, linkageMetric=:average, branchOrder=:optimal, dim=1)
+
+        # ρ = abs.(mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
+        # idxs = sortperm(ρ[:])
+        # clusterF = F[idxs, :]
+
         colorbar --> nothing
-        (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
+        (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), sigmoidNormalise(clusterF))
     end
 
 
@@ -124,7 +135,7 @@ import StatsBase
         inset_subplots := (2, bbox(0,0,1,1))
         yaxis := nothing
         xaxis := nothing
-        clims := (-2.5, 2.5)
+        clims := (0.0, 1.0)
         yguide --> "Features"
         framestyle := :box
         background_color_inside := nothing
@@ -146,6 +157,44 @@ import StatsBase
         background_color_subplot := nothing
         xlims := extrema(dims(I.timeseries, Ti).val)
         x = dims(I.timeseries, Ti).val[I.windowEdges]
+    end
+end
+
+@userplot DimensionalityEstimate
+@recipe function f(D::DimensionalityEstimate)
+    I = D.args[1]
+    legend --> false
+    #link := :x
+    right_margin --> 10Plots.mm
+    grid --> false
+    size --> (1000, 400)
+    framestyle := :box
+    layout --> @layout [ev rv]
+
+    σ² = residualVariance(I.model, I.F̂)
+    ξ² = explainedVariance(I.model)
+    @series begin
+        seriestype := :line
+        markersize --> 5
+        subplot := 1
+        marker --> :circle
+        label --> nothing
+        seriescolor --> :black
+        xguide --> "Principal Components"
+        yguide --> "Residual Variance"
+        (x, y) = (0:length(σ²), [1, σ²...])
+    end
+
+    @series begin
+        seriestype := :line
+        markersize --> 5
+        subplot := 2
+        marker --> :circle
+        label --> nothing
+        seriescolor --> :red
+        xguide --> "Principal Components"
+        yguide --> "Explained Variance"
+        (x, y) = (0:length(ξ²), [0, ξ²...])
     end
 
 end
