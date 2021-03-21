@@ -19,7 +19,7 @@ end
 export normalise
 
 unitInterval(x::AbstractVector{Float64}) = normalise(x, standardise, min(x...), abs(-(extrema(x)...)))
-unitInterval(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+unitInterval(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(unitInterval, X, dims=dim)
 export unitInterval
 
 standardise(x::AbstractVector{Float64}, args...) = normalise(x, standardise, args...)
@@ -72,6 +72,16 @@ export unitL1
 # ------------------------------------------------------------------------------------------------ #
 #                                  Functions for filtering arrays                                  #
 # ------------------------------------------------------------------------------------------------ #
+function noconstantrows(F::AbstractArray; tol=1e-10)
+    idxs = StatsBase.std(F, dims=2) .< tol
+    if any(idxs)
+        @warn "$(+(idxs...)) constant rows are being removed"
+        return F[collect(.!idxs)[:], :]
+    end
+    return F
+end
+export noconstantrows
+
 
 function nonanrows(F::AbstractArray)
     idxs = any(isnan.(Array(F)), dims=2)

@@ -1,11 +1,5 @@
 module ParameterInference
 using NonstationaryProcesses
-include("Windows.jl")
-include("FeatureRepresentations.jl")
-include("Normalisation.jl")
-include("LowDimensionalProjections.jl")
-include("FeatureClustering.jl")
-
 
 # windows:      x -> Array of windows
 # features:     TS array -> feature array
@@ -21,13 +15,23 @@ Base.@kwdef struct Inference
     normalisation
     dimensionalityReduction
     F
-    model
+    F̂ = normalisation(F)
     F′
+    model
     estimates
 end
 export Inference
 
-function infer(x::AbstractVector; windows::Function=slidingWindow, features::Function=catch22, normalisation::Function=nonanrows∘standardise, dimensionalityReduction::Function=principalComponents, parameters=x.+NaN)
+
+include("Features.jl")
+include("Windows.jl")
+include("FeatureRepresentations.jl")
+include("Normalisation.jl")
+include("LowDimensionalProjections.jl")
+include("FeatureClustering.jl")
+
+
+function infer(x::AbstractVector; windows::Function=slidingWindow, features::Function=catch24, normalisation::Function=nonanrows∘standardise∘noconstantrows, dimensionalityReduction::Function=principalComponents, parameters=x.+NaN)
 
     X, windowIdxs = windows(x)
     F = features(X)
