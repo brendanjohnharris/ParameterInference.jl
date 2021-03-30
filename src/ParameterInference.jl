@@ -43,8 +43,8 @@ function infer(x::AbstractVector; windows::Function=slidingWindow, features::Fun
     Inference(timeseries=x, windows=windows, windowEdges=windowIdxs, features=features, normalisation=normalisation, dimensionalityReduction=dimensionalityReduction, model=M, F=F, F′=F′, estimates=estimates, parameters=parameters)
 end
 
-function infer(P::NonstationaryProcesses.Process, dim::Int=1; kwargs...)
-    infer(timeseries(P, dim), parameters=parameters(P); kwargs...)
+function infer(P::NonstationaryProcesses.Process, dim::Int=1; parameters::Int=1, kwargs...)
+    infer(timeseries(P, dim), parameters=NonstationaryProcesses.parameters(P, p=parameters); kwargs...)
 end
 export infer
 

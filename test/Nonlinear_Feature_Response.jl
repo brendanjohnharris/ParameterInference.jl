@@ -51,3 +51,5 @@ plot(parameters(S)[Int.((I.windowEdges[1:end-1].+I.windowEdges[2:end])./2)],  I.
 S = simulate(harmonicSim(parameter_profile=ramp, parameter_profile_parameters=(2π*0.02, π/2, 0.0), tmax=1000.0));
 I_pca = infer(S, windows=x -> slidingWindow(x, length(x)÷(200)))
 I_isomap = infer(S, dimensionalityReduction=isomap, windows=x -> slidingWindow(x, length(x)÷(200)))
+parameterestimate(I_pca)
+parameterestimate(I_isomap)

@@ -37,7 +37,7 @@ import StatsBase
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
 @userplot ParameterEstimate
-@recipe function f(P::ParameterEstimate)
+@recipe function f(P::ParameterEstimate; cluster=false)
     I = P.args[1]
     legend --> false
     #link := :x
@@ -49,7 +49,7 @@ import StatsBase
     ]
     size --> (800, 500)
     left_margin --> 5Plots.mm
-    right_margin --> 5Plots.mm
+    right_margin --> 15Plots.mm
 
     windowCentres = (I.windowEdges[1:end-1] + I.windowEdges[2:end])./2
 
@@ -63,22 +63,27 @@ import StatsBase
     end
 
 # ------------------------------------------- Features ------------------------------------------- #
-
+    F = I.normalisation(I.F)
+    if cluster
+        #D = StatsBase.corspearman(F')
+        #idxs = clusterDistances(D, linkageMetric=:average, branchOrder=:optimal)
+        idxs = clusterPairwise(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
+        clusterF = F[idxs, :]
+    else
+        ρ = (mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
+        idxs = sortperm(ρ[:])
+        clusterF = F[idxs, :]
+    end
     @series begin
         seriestype := :heatmap
         subplot := 2
         seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
         yticks := nothing
-        F = I.normalisation(I.F)
 
-        clusterF = clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
+        println("The clustered features are:\n")
+        display.(dims(F, :feature).val[idxs])
+        #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
 
-        # D = 1.0.-abs.(StatsBase.corspearman(F'))
-        # clusterF = clusterReorder(Array(F), D, linkageMetric=:average, branchOrder=:optimal, dim=1)
-
-        # ρ = abs.(mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
-        # idxs = sortperm(ρ[:])
-        # clusterF = F[idxs, :]
 
         colorbar --> nothing
         (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), sigmoidNormalise(clusterF))
@@ -109,6 +114,7 @@ import StatsBase
             p = -p
         end
         xlims := (0, length(p)) # These go in centres of windows
+
         (x, y) = (0.5:1:length(p)-0.5, p)
     end
 
@@ -137,10 +143,18 @@ import StatsBase
         xaxis := nothing
         clims := (0.0, 1.0)
         yguide --> "Features"
+        if cluster == false
+            ρmin = round(min(ρ...), sigdigits=2)
+            ρmax = round(max(ρ...), sigdigits=2)
+            annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, 1.0, text("ρ=$ρmin", :black, :left, 10)),
+                        (max(dims(I.timeseries, Ti).val...)*1.01, length(ρ)-0.5, text("ρ=$ρmax", :black, :left, 10))]
+        end
+        yflip := true
         framestyle := :box
         background_color_inside := nothing
         background_color_subplot := nothing
         xlims := extrema(dims(I.timeseries, Ti).val)
+        ylims := (0.5, length(idxs)+0.5)
         x = dims(I.timeseries, Ti).val[I.windowEdges]
     end
 
@@ -159,6 +173,9 @@ import StatsBase
         x = dims(I.timeseries, Ti).val[I.windowEdges]
     end
 end
+
+
+
 
 @userplot DimensionalityEstimate
 @recipe function f(D::DimensionalityEstimate)
