@@ -56,7 +56,7 @@ import StatsBase
 # ------------------------------------------ Time series ----------------------------------------- #
 
     @series begin
-        seriestype := :line
+        seriestype := :path
         subplot := 1
         seriescolor := :black
         x = I.timeseries
@@ -71,7 +71,7 @@ import StatsBase
         clusterF = F[idxs, :]
     else
         ρ = (mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
-        idxs = sortperm(ρ[:])
+        idxs = sortperm(ρ[:], rev=true)
         clusterF = F[idxs, :]
     end
     @series begin
@@ -79,7 +79,6 @@ import StatsBase
         subplot := 2
         seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
         yticks := nothing
-
         println("The clustered features are:\n")
         display.(dims(F, :feature).val[idxs])
         #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
@@ -93,7 +92,7 @@ import StatsBase
 # ------------------------------------------ Parameters ------------------------------------------ #
 
     @series begin
-        seriestype := :line
+        seriestype := :path
         subplot := 3
         yaxis := nothing
         seriescolor := :black
@@ -132,6 +131,10 @@ import StatsBase
         framestyle := :box
         background_color_inside := nothing
         background_color_subplot := nothing
+        ymax = round(max(I.timeseries...),  sigdigits=2)
+        ymin = round(min(I.timeseries...),  sigdigits=2)
+        annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymin, text("$ymin", :black, :left, 8)),
+        (max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("$ymax", :black, :left, 8))]
         xlims := extrema(dims(I.timeseries, Ti).val)
         x = dims(I.timeseries, Ti).val[I.windowEdges]
     end
@@ -146,8 +149,8 @@ import StatsBase
         if cluster == false
             ρmin = round(min(ρ...), sigdigits=2)
             ρmax = round(max(ρ...), sigdigits=2)
-            annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, 1.0, text("ρ=$ρmin", :black, :left, 10)),
-                        (max(dims(I.timeseries, Ti).val...)*1.01, length(ρ)-0.5, text("ρ=$ρmax", :black, :left, 10))]
+            annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, length(ρ)-0.5, text("ρ = $ρmin", :black, :left, 8)),
+                        (max(dims(I.timeseries, Ti).val...)*1.01, 1.0, text("ρ = $ρmax", :black, :left, 8))]
         end
         yflip := true
         framestyle := :box
@@ -169,6 +172,10 @@ import StatsBase
         framestyle := :box
         background_color_inside := nothing
         background_color_subplot := nothing
+        ymax = round(max(I.parameters...),  sigdigits=2)
+        ymin = round(min(I.parameters...),  sigdigits=2)
+        annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymin, text("$ymin", :black, :left, 8)),
+        (max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("$ymax", :black, :left, 8))]
         xlims := extrema(dims(I.timeseries, Ti).val)
         x = dims(I.timeseries, Ti).val[I.windowEdges]
     end
@@ -191,7 +198,7 @@ end
     σ² = residualVariance(I.model, I.F̂)
     ξ² = explainedVariance(I.model)
     @series begin
-        seriestype := :line
+        seriestype := :path
         markersize --> 5
         subplot := 1
         marker --> :circle
@@ -203,7 +210,7 @@ end
     end
 
     @series begin
-        seriestype := :line
+        seriestype := :path
         markersize --> 5
         subplot := 2
         marker --> :circle

@@ -32,7 +32,7 @@ M = project(F, principalComponents)
 σ² = residualVariance(M, F)
 ξ² = explainedVariance(M)
 
-p2 = plot(plot(1:length(σ²), σ², seriestype=:line, seriescolor=:black, markersize=5, marker=:circle, label=nothing, ylabel="Residual Variance", xlabel="# PCs"), plot(1:length(ξ²), ξ², seriestype=:line, seriescolor=:red, markersize=5, marker=:circle, label=nothing, ylabel="Prop. Explained Variance", xlabel="# PCs"))
+p2 = plot(plot(1:length(σ²), σ², seriestype=:path, seriescolor=:black, markersize=5, marker=:circle, label=nothing, ylabel="Residual Variance", xlabel="# PCs"), plot(1:length(ξ²), ξ², seriestype=:path, seriescolor=:red, markersize=5, marker=:circle, label=nothing, ylabel="Prop. Explained Variance", xlabel="# PCs"))
 
 
 # Plot parameter estimate/s
