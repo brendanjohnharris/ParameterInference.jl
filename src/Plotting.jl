@@ -37,7 +37,7 @@ import StatsBase
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
 @userplot ParameterEstimate
-@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000))
+@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000), normalisef=true)
     I = P.args[1]
     legend --> false
     #link := :x
@@ -61,6 +61,7 @@ import StatsBase
             yguide --> "Time Series"
             xguide := ""
             framestyle := :box
+            N --> Int(round(mean((collect(I.windowEdges[2:end]) .- collect(I.windowEdges[1:end-1])))))
             yaxis --> nothing
             xaxis --> nothing
             top_margin --> 3Plots.mm
@@ -98,7 +99,7 @@ import StatsBase
 
 # ------------------------------------------- Features ------------------------------------------- #
     # Need to edit the plot attributes of this subplot in the last series of this recipe
-    F = I.normalisation(I.F)
+    F = I.F̂
     if cluster
         #D = StatsBase.corspearman(F')
         #idxs = clusterDistances(D, linkageMetric=:average, branchOrder=:optimal)
@@ -109,14 +110,19 @@ import StatsBase
         idxs = sortperm(ρ[:], rev=true)
         clusterF = F[idxs, :]
     end
+    if normalisef
+        clusterF = sigmoidNormalise(clusterF)
+    else
+        clusterF = normalise(clusterF, centre, 2)
+    end
     @series begin
         seriestype := :heatmap
         subplot := 2
         seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
         println("The clustered features are:\n")
-        display.(dims(F, :feature).val[idxs])
+        display.(dims(F, :feature).val[idxs[end:-1:1]])
         #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
-        (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), sigmoidNormalise(clusterF))
+        (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
     end
 
 
@@ -131,8 +137,8 @@ import StatsBase
         xlims := extrema(t)
         (x, y) = (t, I.parameters)
     end
-    pmax = max(I.parameters...)
-    pmin = min(I.parameters...)
+    pmax = round(max(I.parameters...), sigdigits=2)
+    pmin = round(min(I.parameters...), sigdigits=2)
     inset_subplots := (3, bbox(0,0,1,1))
     @series begin
         seriestype := :scatter
@@ -151,13 +157,11 @@ import StatsBase
         end
         ymax = max(p...)
         ymin = min(p...)
-        ymax -= 0.05*(ymax-ymin)
-        ymin += 0.05*(ymax-ymin)
+        ymax += 0.05*(ymax-ymin)
+        ymin -= 0.05*(ymax-ymin)
         ylims := (ymin, ymax)
-        ymax -= 0.05*(ymax-ymin)
-        ymin += 0.05*(ymax-ymin)
-        ymax = round(ymax,  sigdigits=2)
-        ymin = round(ymin,  sigdigits=2)
+        ymax -= 0.1*(ymax-ymin)
+        ymin += 0.1*(ymax-ymin)
         xs = length(p)*1.01
         annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
         (xs, ymax, text("$pmax", :black, :left, 8))]
@@ -252,12 +256,25 @@ end
 
 
     # We want to take a long time series, choose some windows of length N and plot these adjacently
-    idxs = Int.(round.(LinRange(N÷2, L-N÷2, windows)))
-    idxs = [1+(i-N÷2):(i+N÷2) for i in idxs]
+    dL = (L÷(2*windows))
+    idxs = [2*a*dL+dL-Int(floor(N/2)):1:2*a*dL+dL+Int(floor(N/2)-1) for a ∈ (1:windows).-1]
     dispxs = LinRange(0, max(x...), length(vcat(idxs...)))
     nn = -N+1
     for s in 1:length(idxs)
         nn += N
+        # if nn-N < 1
+        #     annx = (dispxs[nn+N])/2
+        # elseif nn+N > length(dispxs)
+        #     annx = (dispxs[nn] + dispxs[end])/2
+        #     println(dispxs[nn])
+        # else
+        #     annx = (dispxs[nn+N] + dispxs[nn])/2
+        # end
+        # anum = (round((x[idxs[s][end]] + x[idxs[s][1]])/2, sigdigits=2))
+        # if dispxs[end] > 99
+        #     anum = Int(anum)
+        # end
+        # annotations := [(annx, min(y...)-2*scale, text("$anum", :black, :centre, 8))]
         if s < length(idxs)
             barx = (max(dispxs[nn:nn+N-1]...) + min(dispxs[(nn+N):(nn+2*N-1)]...))/2
             @series begin
