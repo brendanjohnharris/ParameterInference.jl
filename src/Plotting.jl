@@ -131,7 +131,8 @@ import StatsBase
         xlims := extrema(t)
         (x, y) = (t, I.parameters)
     end
-
+    pmax = max(I.parameters...)
+    pmin = min(I.parameters...)
     inset_subplots := (3, bbox(0,0,1,1))
     @series begin
         seriestype := :scatter
@@ -158,8 +159,8 @@ import StatsBase
         ymax = round(ymax,  sigdigits=2)
         ymin = round(ymin,  sigdigits=2)
         xs = length(p)*1.01
-        annotations:= [(xs, ymin, text("$ymin", :black, :left, 8)),
-        (xs, ymax, text("$ymax", :black, :left, 8))]
+        annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
+        (xs, ymax, text("$pmax", :black, :left, 8))]
         xlims := (0, length(p)) # These go in centres of windows
 
         (x, y) = (0.5:1:length(p)-0.5, p)
