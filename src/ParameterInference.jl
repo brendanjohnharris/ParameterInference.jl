@@ -5,42 +5,41 @@ using NonstationaryProcesses
 # features:     TS array -> feature array
 # projections:  feature array -> low dim projection array
 # estimates:    projection array --> parameter estimates
+_self(arg) = arg
+export _self
 
 Base.@kwdef struct Inference
+    # These you can set
     timeseries
-    parameters=timeseries .+ NaN
-    windows
-    windowEdges
-    features
-    normalisation
-    dimensionalityReduction
-    F
-    F̂ = normalisation(F)
-    F′
-    model
-    estimates
+    windows = slidingWindow
+    features = catch24
+    baseline = _self
+    filter = nonanrows∘noconstantrows
+    normalisation = standardise
+    dimensionalityReduction = principalComponents
+    parameters = timeseries .+ NaN
+    # These you should leave to calculate
+    windowedTimeseries = (windows)(timeseries)
+    windowEdges = windowedTimeseries[2]
+    F = features(windowedTimeseries[1])
+    F̂ = (normalisation∘filter∘baseline)(F)
+    model = project(Array(F̂), dimensionalityReduction)
+    F′ = embed(model, Array(F̂))
+    estimates = embed(model, Array(F̂), [1])
 end
 export Inference
 
-
+include("Baseline.jl")
 include("Features.jl")
-include("Windows.jl")
-include("FeatureRepresentations.jl")
-include("Normalisation.jl")
-include("LowDimensionalProjections.jl")
 include("FeatureClustering.jl")
+include("FeatureRepresentations.jl")
+include("LowDimensionalProjections.jl")
+include("Normalisation.jl")
+include("Plotting.jl")
+include("Windows.jl")
 
-
-function infer(x::AbstractVector; windows::Function=slidingWindow, features::Function=catch24, normalisation::Function=nonanrows∘standardise∘noconstantrows, dimensionalityReduction::Function=principalComponents, parameters=x.+NaN)
-
-    X, windowIdxs = windows(x)
-    F = features(X)
-    F̂ = normalisation(F)
-    M = project(Array(F̂), dimensionalityReduction)
-    F′ = embed(M, Array(F̂))
-    estimates = embed(M, Array(F̂), [1]) # One parameter for now, think about more
-
-    Inference(timeseries=x, windows=windows, windowEdges=windowIdxs, features=features, normalisation=normalisation, dimensionalityReduction=dimensionalityReduction, model=M, F=F, F′=F′, estimates=estimates, parameters=parameters)
+function infer(x::AbstractVector; kwargs...)
+    Inference(timeseries=x; kwargs...)
 end
 
 function infer(P::NonstationaryProcesses.Process, dim::Int=1; parameters::Int=1, kwargs...)
@@ -48,7 +47,4 @@ function infer(P::NonstationaryProcesses.Process, dim::Int=1; parameters::Int=1,
 end
 export infer
 
-
-
-include("Plotting.jl")
 end
