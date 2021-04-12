@@ -41,8 +41,8 @@ f = PC1[argmax(abs.(PC1)), :];
 println("The heaviest feature in the first principle component is $(val(refdims(f))[1]) (w=$(@sprintf("%.2f", f[1])))")
 # plot(times(S)[Int.((I.windowEdges[1:end-1].+I.windowEdges[2:end])./2)], I.F[val(refdims(f))[1], :], seriescolor=:black, size=(600, 400), right_margin=20Plots.mm, left_margin=10Plots.mm, box=true)
 # plot!(xguide="Time", yguide="$(val(refdims(f))[1])", legend=nothing)
-# plot!(twinx(), times(S), parameters(S), seriescolor=:red, yguide="ω", legend=nothing, guidecolor=:red)
-plot(parameters(S)[Int.((I.windowEdges[1:end-1].+I.windowEdges[2:end])./2)],  I.F[val(refdims(f))[1], :], xguide="ω ∼ t", yguide="$(val(refdims(f))[1])", seriescolor=:black, legend=nothing, box=true)
+# plot!(twinx(), times(S), parameterseries(S), seriescolor=:red, yguide="ω", legend=nothing, guidecolor=:red)
+plot(parameterseries(S)[Int.((I.windowEdges[1:end-1].+I.windowEdges[2:end])./2)],  I.F[val(refdims(f))[1], :], xguide="ω ∼ t", yguide="$(val(refdims(f))[1])", seriescolor=:black, legend=nothing, box=true)
 
 
 # Can we improve the estimate using nonlinear dimensionality reduction

@@ -12,7 +12,7 @@ sim = gaussianBimodalSim(
 S = sim(tmax=1000); tsdensity(S)
 # Run lots of baseline simulations, and save the results in a vector
 𝐩 = fill(5.0, (100,));
-𝐗0 = 0.01.*randn(100).+1.0 # So we don't have exactly the same time series repeated 100 times
+#𝐗0 = 0.01.*randn(100).+1.0 # So we don't have exactly the same time series repeated 100 times
 𝒮 = [simulate(sim(ps = (p, (1.0), (0.2)))) for p ∈ 𝐩];
 𝒳 = timeseries.(𝒮);
 

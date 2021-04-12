@@ -16,7 +16,7 @@ sim = shcalySineSim(
 # The baseline for this example is just noise of the same amplitude.
 # This exposes any variance in features that really shouldn't be there.
 𝐩 = fill(1.0, (100,));
-𝐗0 = 0.01.*randn(100).+1.0 # So we don't have exactly the same time series repeated 100 times
+𝐗0 =# 0.01.*randn(100).+1.0 # So we don't have exactly the same time series repeated 100 times
 𝒮 = [simulate(sim(ps = [p])) for p ∈ 𝐩];
 𝒳 = timeseries.(𝒮);
 

@@ -35,7 +35,7 @@ p2 = plot(plot(0:length(σ²), [1, σ²...], seriestype=:path, seriescolor=:blac
 nPs = 1
 ps = embed(M, F, 1:nPs)
 p3 = plot(unitInterval(-ps[:]), xlabel="Window/time", ylabel="Parameter (a.u.)", label="Estimate", legend=:bottomright)
-p = NonstationaryProcesses.tuplef2ftuple(sim.parameter_profile, sim.parameter_profile_parameters) # Add parameters() func to NonstationaryProcesses)
+p = NonstationaryProcesses.tuplef2ftuple(sim.parameter_profile, sim.parameter_profile_parameters) # Add parameterseries() func to NonstationaryProcesses)
 t = sim.t0:sim.savedt:sim.tmax
 dasht = length(ps).*((sim.t0:sim.savedt:sim.tmax).-sim.t0)./sim.tmax
 plot!(dasht, unitInterval(p(t)), seriescolor=:red, label="True")

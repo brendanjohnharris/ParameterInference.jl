@@ -14,8 +14,6 @@ sim = shcalySineSim(
     )
 
 # Run lots of baseline simulations, and save the results in a vector
-# The baseline for this example is just noise of the same amplitude.
-# This exposes any variance in features that really shouldn't be there.
 𝐩 = fill(4π, (100,));
 𝒮 = [simulate(sim(ps = [p])) for p ∈ 𝐩];
 𝒳 = timeseries.(𝒮);
