@@ -43,7 +43,7 @@ function infer(x::AbstractVector; kwargs...)
 end
 
 function infer(P::NonstationaryProcesses.Process, dim::Int=1; parameters::Int=1, kwargs...)
-    infer(timeseries(P, dim), parameters=NonstationaryProcesses.parameters(P, p=parameters); kwargs...)
+    infer(timeseries(P, dim), parameters=NonstationaryProcesses.parameterseries(P, p=parameters); kwargs...)
 end
 export infer
 

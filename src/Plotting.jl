@@ -49,7 +49,7 @@ import StatsBase
     ]
     size --> (800, 500)
     left_margin --> 5Plots.mm
-    right_margin --> 15Plots.mm
+    right_margin --> 20Plots.mm
 
     windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
 # ------------------------------------------ Time series ----------------------------------------- #
@@ -65,8 +65,8 @@ import StatsBase
             yaxis --> nothing
             xaxis --> nothing
             top_margin --> 3Plots.mm
-            ymax = round(max(I.timeseries...),  sigdigits=2)
-            ymin = round(min(I.timeseries...),  sigdigits=2)
+            ymax = round(max(I.timeseries...),  sigdigits=3)
+            ymin = round(min(I.timeseries...),  sigdigits=3)
             annotations := [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
             (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
             xlims := extrema(t)
@@ -87,8 +87,8 @@ import StatsBase
             ymin = min(I.timeseries...)
             ymax -= 0.05*(ymax-ymin)
             ymin += 0.05*(ymax-ymin)
-            ymax = round(ymax,  sigdigits=2)
-            ymin = round(ymin,  sigdigits=2)
+            ymax = round(ymax,  sigdigits=3)
+            ymin = round(ymin,  sigdigits=3)
             annotations:= [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
             (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
             xlims := extrema(t)
@@ -119,8 +119,10 @@ import StatsBase
         seriestype := :heatmap
         subplot := 2
         seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
+        clim = max(abs.(extrema(clusterF))...)
+        clims := (-clim, clim)
         println("The clustered features are:\n")
-        display.(dims(F, :feature).val[idxs[end:-1:1]])
+        display.(Catch22.featureDims(clusterF))
         #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
         (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
     end
@@ -137,8 +139,8 @@ import StatsBase
         xlims := extrema(t)
         (x, y) = (t, I.parameters)
     end
-    pmax = round(max(I.parameters...), sigdigits=2)
-    pmin = round(min(I.parameters...), sigdigits=2)
+    pmax = round(max(I.parameters...), sigdigits=3)
+    pmin = round(min(I.parameters...), sigdigits=3)
     inset_subplots := (3, bbox(0,0,1,1))
     @series begin
         seriestype := :scatter
@@ -163,8 +165,10 @@ import StatsBase
         ymax -= 0.1*(ymax-ymin)
         ymin += 0.1*(ymax-ymin)
         xs = length(p)*1.01
+        ρₚ = round(corspearman(I.parameters[Int.(windowCentres)], I.estimates); sigdigits=3)
         annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
-        (xs, ymax, text("$pmax", :black, :left, 8))]
+                        (xs, ymax, text("$pmax", :black, :left, 8)),
+                        (xs, (ymin+ymax)/2, text("ρ = $ρₚ", :black, :left, 11))]
         xlims := (0, length(p)) # These go in centres of windows
 
         (x, y) = (0.5:1:length(p)-0.5, p)
@@ -182,8 +186,8 @@ import StatsBase
         ymax -= 0.05*(ymax-ymin)
         ymin += 0.05*(ymax-ymin)
         if cluster == false
-            ρmin = round(min(ρ...), sigdigits=2)
-            ρmax = round(max(ρ...), sigdigits=2)
+            ρmin = round(min(ρ...), sigdigits=3)
+            ρmax = round(max(ρ...), sigdigits=3)
             annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
                         (max(dims(I.timeseries, Ti).val...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
         end
@@ -270,7 +274,7 @@ end
         # else
         #     annx = (dispxs[nn+N] + dispxs[nn])/2
         # end
-        # anum = (round((x[idxs[s][end]] + x[idxs[s][1]])/2, sigdigits=2))
+        # anum = (round((x[idxs[s][end]] + x[idxs[s][1]])/2, sigdigits=3))
         # if dispxs[end] > 99
         #     anum = Int(anum)
         # end
@@ -295,4 +299,79 @@ end
             y := y[idxs[s]]
         end
     end
+end
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                 Compare the distributions of features in a feature matrices                      #
+# ------------------------------------------------------------------------------------------------ #
+
+@userplot FeatureViolin
+@recipe function f(H::FeatureViolin; normalise=:feature, normtype=:mix)
+    # if normalise is on, normalise distributions to the range of the first feature matrix but centre uniquely
+    F = H.args
+    if length(F) == 1
+        F = F[1]
+        F[isinf.(F)] .= 0
+        F2 = nothing
+    elseif length(F) == 2
+        F, F2 = F
+        F[isinf.(F)] .= 0
+        F2[isinf.(F2)] .= 0
+    end
+    if normtype == :zscore
+        f1 = x -> StatsBase.std(x)
+        f2 = x -> mean(x)
+    elseif normtype == :unit
+        f1 = x -> abs(-(extrema(x)...))
+        f2 = x -> mean(extrema(x))
+    elseif normtype == :mix
+        f1 = x -> abs(-(extrema(x)...))
+        f2 = x -> mean(x)
+    end
+    if normalise == :feature && !isnothing(F2)
+        S = mapslices(f1, hcat(F, F2), dims=2)
+        C = mapslices(f2, hcat(F, F2), dims=2)
+        S[S .== 0] .= 1.0
+        F = (F.-C)./S
+        F2 = (F2.-C)./S
+        yaxis --> nothing
+    elseif normalise
+        S = mapslices(f1, F, dims=2)
+        C = mapslices(f2, F, dims=2)
+        S[S .== 0] .= 1.0
+        F = (F.-C)./S
+        if ~isnothing(F2)
+            F2 = (F2.- mapslices(x -> mean(x), F2, dims=2))./S
+        end
+    end
+
+    fnames = replace.(String.(Catch22.featureDims(F)),  '_'=>"\\_")
+
+    tickfontrotation --> 90
+    size --> (800, 800)
+    legend := false
+
+    if ~isnothing(F2)
+        @series begin
+            seriestype := :violin
+            side := :right
+            seriescolor := :crimson
+            ((1:size(F2, 1))', Array(F2)')
+        end
+    end
+
+    @series begin
+        seriestype := :violin
+        #bottom_margin --> 70Plots.mm
+        #top_margin --> 70Plots.mm
+        tickfontvalign := :top
+        framestyle --> :box
+        ymirror --> true
+        if ~isnothing(F2); side := :left; seriescolor := :cornflowerblue; end
+        xticks --> (1:size(F, 1), fnames)
+        ((1:size(F, 1))', Array(F)')
+    end
+
 end
