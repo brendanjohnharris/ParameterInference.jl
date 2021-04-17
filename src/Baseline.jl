@@ -1,8 +1,5 @@
 using StatsBase
-# Will have one function for each baseline method, which takes an input (train) feature matrix and then defines a function/rule for re-basing another input (test) matrix.
-function reScale(F::AbstractArray)
-
-end
+import StatsBase.std
 
 function reStandardise(F::AbstractArray)
     idxs = vec(nanrows(F) .| constantrows(F))
@@ -26,3 +23,30 @@ function reZero(F::AbstractArray, α::Float64=10.0)
     return f
 end
 export reZero
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                            Combine a high and low dimensional baseline                           #
+# ------------------------------------------------------------------------------------------------ #
+function reScale(x::AbstractVector, f::Function=_self)
+    σ = std(F)
+    σ′ = f(σ)
+    return σ′.*x
+end
+function reScale(F::AbstractArray, f::Vector{Function})
+    F′ = copy(F)
+    for r = 1:size(F, 1)
+        F′[r, :] = reScale(F′[r, :] , f[r])
+    end
+    return F′
+end
+function hiloScale(Fₗ::AbstractArray{Float64, 2}, Fₕ::AbstractArray{Float64, 2},
+                    interval::Function=(x, y) -> NonstationaryProcesses.intervalRamp(0, 1, x, y))
+    # interval gives a function of σ, the test variance, with parameters σₗ and σₕ
+    if size(Fₗ, 1) != size(Fₕ, 1)
+        error("High and low dimensional baselines do not have the same number of features")
+    endrampInter
+    𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
+    𝐟 = interval.(𝛔ₗ, 𝛔ₕ)
+    return reScale.(F, 𝐟)
+end
