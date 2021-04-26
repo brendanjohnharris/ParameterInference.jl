@@ -6,7 +6,7 @@
 
 # I NEED a custom FeatureArray
 @userplot FeatureViolin
-@recipe function f(H::FeatureViolin; normalise=:feature, normtype=:mix)
+@recipe function f(H::FeatureViolin; normalise=:feature, normtype=:mix, rightannotations=nothing)
     # if normalise is on, normalise distributions to the range of the first feature matrix but centre uniquely
     F = H.args
     if length(F) == 1
@@ -53,7 +53,7 @@
     fnames = replace.(String.(Catch22.featureDims(F)),  '_'=>"\\_")
 
     tickfontrotation --> 90
-    size --> (800, 800)
+    size --> (700, 900)
     legend := false
 
     if ~isnothing(F2)
@@ -65,8 +65,13 @@
         end
     end
 
+
     @series begin
         seriestype := :violin
+        if ~isnothing(rightannotations)
+            top_margin --> 40Plots.mm
+            annotations := [(i, 1.1, rightannotations[i]) for i ∈ 1:length(rightannotations)]
+        end
         #bottom_margin --> 70Plots.mm
         #top_margin --> 70Plots.mm
         tickfontvalign := :top
