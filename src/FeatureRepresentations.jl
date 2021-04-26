@@ -20,11 +20,46 @@ end
 catch23(X::AbstractArray{Float64, 2}) = Catch22.featureMatrix(mapslices(catch23, X, dims=[1]), catch23Names)
 export catch23
 
-# List of feature functions:
-#   - catch22
-#   - catch24
-#   -.........
+IntFeatures = [:CO_f1ecac, :CO_FirstMin_ac, :IN_AutoMutualInfoStats_40_gaussian_fmmi, :SB_BinaryStats_diff_longstretch0, :SB_BinaryStats_mean_longstretch1, :PD_PeriodicityWang_th0_01, :FC_LocalSimple_mean1_tauresrat]
+catch24sansIntnames = setdiff(catch24Names, IntFeatures)
+catch22sansIntnames = setdiff(Catch22.featureNames, IntFeatures)
+function catch24sansInt(𝐱::AbstractVector{Float64})
+    𝐟 = vcat(StatsBase.mean(𝐱), StatsBase.std(𝐱), catch22(𝐱, catch22sansIntnames)...)
+    Catch22.featureVector(𝐟, catch24sansIntnames)
+end
+catch24sansInt(X::AbstractArray{Float64, 2}) = Catch22.featureMatrix(mapslices(catch24sansInt, X, dims=[1]), catch24sansIntnames)
+export catch24sansInt
+
+
 function featureRepresentation(X, featureFunc::Function)
     F = featureFunc(X)
 end
 export featureRepresentation
+
+
+function NonstationaryProcesses.forcemat(x::DimArray)
+    if typeof(x) <: AbstractVector
+        x = Catch22.featureMatrix(forcemat(Array(x)), Catch22.featureDims(x))
+    end
+    return x
+end
+
+function intersectFeatures(X::DimArray, Y::DimArray)
+    # Will be stable in the order of features in X
+    fx, fy = Catch22.featureDims(X), Catch22.featureDims(Y)
+    if any(.!in.(fx, (fy,)))
+        error("The features of Y are neither the same as nor a superset of the features in X")
+    end
+    fs = intersect(Catch22.featureDims(X), Catch22.featureDims(Y))
+    return (X[fs, :], forcemat(Y)[fs, :])
+end
+function intersectFeatures(X::DimArray, Y::Array)
+    # Label Y with the same features as X
+    if size(X, 1) != size(Y, 1)
+        @error "X and Y do not have the same number of rows"
+    end
+    fs = Catch22.featureDims(X)
+    Y = DimensionalData.DimArray(Y, (Dim{:feature}(fs),))
+    return (X, Y)
+end
+export intersectFeatures
