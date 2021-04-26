@@ -2,7 +2,7 @@
 #                                        Windowing functions                                       #
 # ------------------------------------------------------------------------------------------------ #
 
-function slidingWindow(x::AbstractVector, width::Int=length(x)÷(21-!iseven(length(x)÷21)), overlap::Int=0, windowFunc::Function=rect)
+function slidingWindow(x::AbstractVector, width::Int=length(x)÷20, overlap::Int=0, windowFunc::Function=rect)
     # windowFunc must be vectorised
     # Construct sub-timeseries
     X = hcat([x[Array(1:width).+a] for a in 0:(width-overlap):(length(x)-width)]...)

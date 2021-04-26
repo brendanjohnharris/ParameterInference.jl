@@ -44,10 +44,13 @@ end
 export explainedVariance
 # add method to explainedVariance for new data
 
-
+export principalvars
 # ------------------------------------------------------------------------------------------------ #
 #                                          Feature Weights                                         #
 # ------------------------------------------------------------------------------------------------ #
+function PCfeatureWeights(model::MultivariateStats.PCA, pc::Int=1)
+    P = projection(model)
+end
 function PCfeatureWeights(I::Inference, pc::Int=1)
     P = projection(I.model)
     Catch22.featureVector(P[:, pc], val(dims(I.F̂, :feature)))
