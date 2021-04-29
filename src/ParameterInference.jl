@@ -15,7 +15,7 @@ Base.@kwdef struct Inference
     features = catch24
     baseline = _self
     filter = nonanrows#∘noconstantrows
-    normalisation = standardise
+    normalisation = _self#standardise
     dimensionalityReduction = principalComponents
     parameters = timeseries .+ NaN
     # These you should leave to calculate
