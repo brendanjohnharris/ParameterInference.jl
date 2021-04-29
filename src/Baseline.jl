@@ -62,6 +62,7 @@ function hiloScale(Fₗ::DimArray{Float64, 2}, Fₕ::DimArray{Float64, 2},
         error("High and low dimensional baselines do not have the same features")
     end
     𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
+    𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
     𝐟 = interval.(vec(𝛔ₗ), vec(𝛔ₕ))
     𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(Fₗ))
     return F -> reScale(F, 𝐟)

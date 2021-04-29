@@ -109,6 +109,7 @@ end
     end
 
     𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
+    𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
     fnames = Catch22.featureDims(F)
     𝐟 = interval.(vec(𝛔ₗ), vec(𝛔ₕ))
     𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(Fₗ))
@@ -140,7 +141,7 @@ end
         y = vec(𝛔ᵣ)
         if names
             ftsz = [1+Int(round(y[i]./max(y...))).*8 for i ∈ 1:lastindex(fnames)]
-            annotations := [(x[i]+0.025, y[i], text("$(fnames[i])", :black, :left, ftsz[i])) for i ∈ 1:lastindex(fnames)]
+            annotations := [(x[i]+0.05, y[i], text("$(fnames[i])", :black, :left, ftsz[i])) for i ∈ 1:lastindex(fnames)]
         end
         (x, y)
     end
