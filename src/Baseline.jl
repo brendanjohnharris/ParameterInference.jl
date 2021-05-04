@@ -69,3 +69,39 @@ function hiloScale(Fₗ::DimArray{Float64, 2}, Fₕ::DimArray{Float64, 2},
 end
 export hiloScale
 
+# ------------------------------------------------------------------------------------------------ #
+#                                    Scale a baseline using PCA                                    #
+# ------------------------------------------------------------------------------------------------ #
+function orthonormalise(F::AbstractArray, dimensionalityReduction=principalComponents)
+    M = dimensionalityReduction(F)
+    F̂ = embed(M, F)
+    return (F̂, M)
+end
+function orthonormalise(F::DimArray{Float64, 2}, dimensionalityReduction=principalComponents)
+    F̂, M = orthonormalise(Array(F), dimensionalityReduction)
+    F̂ = Catch22.featureMatrix(F̂, [Symbol("PC$x") for x ∈ 1:size(F̂, 1)])
+    return F̂, M
+end
+export orthonormalise
+
+function orthonormalBaseline(F::DimArray{Float64, 2}, dimensionalityReduction=principalComponents)
+    function 𝑏(F_test)
+        F_test, F = intersectFeatures(F_test, F)
+        F̂, M = orthonormalise(F, dimensionalityReduction)
+        F_test = embed(M, Array(F_test))
+        F_out = Catch22.featureMatrix(F_test, [Symbol("PC$x") for x ∈ 1:size(F_test, 1)])
+    end
+    return 𝑏
+end
+export orthonormalBaseline
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               Filter features using correlations/MI                              #
+# ------------------------------------------------------------------------------------------------ #
+function dependencyFilter()
+
+
+end

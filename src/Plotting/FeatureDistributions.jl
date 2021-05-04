@@ -1,4 +1,4 @@
-
+using StatsPlots
 
 # ------------------------------------------------------------------------------------------------ #
 #                 Compare the distributions of features in a feature matrices                      #

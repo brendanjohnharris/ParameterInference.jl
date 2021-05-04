@@ -31,6 +31,11 @@ function embed(M::MultivariateStats.PCA{Float64}, F::AbstractArray, PCs::Union{I
     end
     return D
 end
+
+function embed(M::MultivariateStats.PCA{Float64}, F::DimArray{Float64}, args...; kwargs...)
+    D = embed(M, Array(F), args...; kwargs...)
+    Catch22.featureMatrix(D, [Symbol("PC$x") for x ∈ 1:size(D, 1)])
+end
 export embed
 
 
@@ -49,7 +54,7 @@ export principalvars
 #                                          Feature Weights                                         #
 # ------------------------------------------------------------------------------------------------ #
 function PCfeatureWeights(model::MultivariateStats.PCA, pc::Int=1)
-    P = projection(model)
+    P = projection(model)[:, pc]
 end
 function PCfeatureWeights(I::Inference, pc::Int=1)
     P = projection(I.model)
