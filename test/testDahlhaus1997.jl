@@ -16,10 +16,11 @@ tmax = T)
 
 # Constant Baseline
 ϕ₁′(t) = 0.0
-𝒮′ = [simulate(sim(profiles=(ϕ₁′, ϕ₂), tmax=T/20)) for i ∈ 1:100];
+𝒮′ = [simulate(S(profiles=(ϕ₁′, ϕ₂), tmax=T/20)) for i ∈ 1:100];
 𝒳′ = timeseries.(𝒮′);
 F′ = (catch24∘Array).(𝒳′);
 F′  = Catch22.featureMatrix(hcat(F′...), Catch22.featureDims(F′[1]))
 
-I = infer(S(), baseline=reStandardise(F′)) #() resets the RNG seed
+#I = infer(S(), baseline=noconstantrows∘reStandardise(F′), normalisation=_self) #() resets the RNG seed
+I = infer(S(), baseline=_self, normalisation=nonanrows∘noconstantrows∘standardise)
 parameterestimate(I, normalisef=false)

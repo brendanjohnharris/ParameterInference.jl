@@ -14,18 +14,21 @@ Base.@kwdef struct Inference
     windows = slidingWindow
     features = catch24
     baseline = _self
-    filter = nonanrows∘noconstantrows
-    normalisation = standardise
+    filter = nonanrows#∘noconstantrows
+    normalisation = _self#standardise
     dimensionalityReduction = principalComponents
     parameters = timeseries .+ NaN
     # These you should leave to calculate
     windowedTimeseries = (windows)(timeseries)
     windowEdges = windowedTimeseries[2]
+    windowCentres = (windowEdges[1:end-1] + windowEdges[2:end])./2
     F = features(windowedTimeseries[1])
     F̂ = (normalisation∘filter∘baseline)(F)
     model = project(Array(F̂), dimensionalityReduction)
     F′ = embed(model, Array(F̂))
     estimates = embed(model, Array(F̂), [1])
+    corrtype = corspearman
+    ρ = corrtype(parameters[Int.(round.(windowCentres))], estimates)
 end
 export Inference
 
@@ -37,6 +40,7 @@ include("LowDimensionalProjections.jl")
 include("Normalisation.jl")
 include("Plotting.jl")
 include("Windows.jl")
+include("DistributionTests.jl")
 
 function infer(x::AbstractVector; kwargs...)
     Inference(timeseries=x; kwargs...)

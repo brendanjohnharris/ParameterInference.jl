@@ -26,6 +26,12 @@ function normalise(X::AbstractArray, 𝛍::AbstractArray, 𝛔::AbstractArray, f
         @cast Y[i, j] := normalise(X[i, j], f, 𝛍[i], 𝛔[i])
     end
 end
+function normalise(X::DimensionalArray, 𝛍::DimensionalArray, 𝛔::DimensionalArray, f::Function=standardise, dim::Int=2)
+    X, 𝛍 = intersectFeatures(X, 𝛍)
+    X, 𝛔 = intersectFeatures(X, 𝛔)
+    X, 𝛍 = intersectFeatures(X, 𝛍) # In case sigma is different from mu in features
+    normalise(X, vec(𝛍), vec(𝛔), f, dim)
+end
 export normalise
 
 unitInterval(x::AbstractVector{Float64}) = normalise(x, standardise, min(x...), abs(-(extrema(x)...)))
