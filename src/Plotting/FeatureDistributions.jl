@@ -32,15 +32,18 @@ using StatsPlots
     elseif normtype == :mix
         f1 = x -> abs(-(extrema(x)...))
         f2 = x -> mean(x)
+    elseif normtype == :none
+        f1 = x -> 1.0
+        f2 = x -> 0.0
     end
-    if normalise == :feature && !isnothing(F2)
+    if (normalise == :feature) && !isnothing(F2)
         S = mapslices(f1, hcat(F, F2), dims=2)
         C = mapslices(f2, hcat(F, F2), dims=2)
         S[S .== 0] .= 1.0
         F = (F.-C)./S
         F2 = (F2.-C)./S
         yaxis --> nothing
-    elseif normalise
+    elseif isnothing(F2) || normalise
         S = mapslices(f1, F, dims=2)
         C = mapslices(f2, F, dims=2)
         S[S .== 0] .= 1.0
@@ -116,11 +119,11 @@ end
     (F, 𝐟) = intersectFeatures(F, 𝐟)
     𝛔 = std(F, dims=2)
 
-
     xx = -0.1:0.01:1.1
     f₁ = interval(0.0, 1.0)
     yy = f₁.(xx)
     𝛔ᵣ = [𝐟[s, 1](𝛔[s, 1]) for s ∈ fnames]
+    #𝛔ᵣ[𝛔ₕ .< 2.0*𝛔ₗ, :] .= 0.0 # Will need a better threshold
     @series begin
         seriescolor --> :black
         linewidth --> 3

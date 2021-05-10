@@ -2,7 +2,6 @@ using Catch22
 using StatsBase
 
 
-
 catch24Names = vcat(:mean, :standard_deviation, Catch22.featureNames...)
 function catch24(𝐱::AbstractVector{Float64})
     𝐟 = vcat(StatsBase.mean(𝐱), StatsBase.std(𝐱), catch22(𝐱)...)
@@ -66,5 +65,16 @@ function intersectFeatures(X::DimArray, Y::Array)
     fs = Catch22.featureDims(X)
     Y = DimensionalData.DimArray(Y, (Dim{:feature}(fs), Dim{:timeseries}(1:size(Y, 2))))
     return (X, Y)
+end
+function intersectFeatures(X, Y, Z, otherarrays...)
+    otherarrays = [Y, Z, otherarrays...]
+    for i ∈ 1:lastindex(otherarrays)
+        X, otherarrays[i] = intersectFeatures(X, otherarrays[i])
+    end
+    # Then do it again in case we missed any
+    for i ∈ 1:lastindex(otherarrays)
+        X, otherarrays[i] = intersectFeatures(X, otherarrays[i])
+    end
+    return (X, otherarrays...)
 end
 export intersectFeatures

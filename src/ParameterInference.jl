@@ -41,6 +41,7 @@ include("Normalisation.jl")
 include("Plotting.jl")
 include("Windows.jl")
 include("DistributionTests.jl")
+include("Information.jl")
 
 function infer(x::AbstractVector; kwargs...)
     Inference(timeseries=x; kwargs...)
