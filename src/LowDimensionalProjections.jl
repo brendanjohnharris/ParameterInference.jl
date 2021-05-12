@@ -2,6 +2,7 @@ using MultivariateStats
 using Distances
 using Catch22
 using ManifoldLearning
+using LinearAlgebra
 
 
 # Function wrapping projectors
@@ -47,13 +48,20 @@ function explainedVariance(M::MultivariateStats.PCA{Float64})
     ev = cumsum(unitL1(ev))
 end
 export explainedVariance
+
 # add method to explainedVariance for new data
+
+function explainedVariance(F::AbstractArray)
+# The varainces of each feature as a proportion of the total variance
+    Σ² = StatsBase.cov(F, dims=2)
+    ev = diag(Σ²)./sum(diag(Σ²))
+end
 
 export principalvars
 # ------------------------------------------------------------------------------------------------ #
 #                                          Feature Weights                                         #
 # ------------------------------------------------------------------------------------------------ #
-function PCfeatureWeights(model::MultivariateStats.PCA, pc::Int=1)
+function PCfeatureWeights(model::MultivariateStats.PCA, pc=1:outdim(model))
     P = projection(model)[:, pc]
 end
 function PCfeatureWeights(I::Inference, pc::Int=1)

@@ -32,7 +32,6 @@ export reZero
 function reScale(x::AbstractVector, f::Function=_self)
     σ = std(x)
     σ′ = f(σ)
-    println(σ)
     return σ′.*x./σ
 end
 function reScale(F::AbstractArray, f::Vector)
@@ -106,7 +105,7 @@ function orthonormalHiloBaseline(F::DimArray, ℱₗ::DimArray, ℱₕ::DimArray
     𝑏′ = hiloScale(Array(ℱ′ₗ), Array(ℱₕ′), interval)
     return 𝑏′(F′)
 end
-orthonormalHiloBaseline(ℱₗ::DimArray, ℱₕ::DimArray) = F -> orthonormalHiloBaseline(F, ℱₗ, ℱₕ)
+orthonormalHiloBaseline(ℱₗ::DimArray, ℱₕ::DimArray; kwargs...) = F -> orthonormalHiloBaseline(F, ℱₗ, ℱₕ; kwargs...)
 export orthonormalHiloBaseline
 
 

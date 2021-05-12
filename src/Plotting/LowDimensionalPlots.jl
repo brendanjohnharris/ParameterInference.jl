@@ -5,6 +5,9 @@
 @recipe function f(h::LowDim2; method=principalComponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
     # show(size(F))
     F = h.args[1]
+    # if h.args > 1
+    #     Fs = h.args[2:end]
+    # end
     fs = Catch22.featureDims(F)
     seriestype := scatter
     M = project(standardise(Array(F)), method)
@@ -13,7 +16,7 @@
     if typeof(M) <: MultivariateStats.PCA
         PV = principalvars(M)
         PV = PV[1:2]./sum(PV)
-        wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M)[:, 1:2], dims=1)
+        wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M, 1:2), dims=1)
         weights, fis = findmax(PCfeatureWeights(M)[:, 1:2], dims=1)
         PV = [round(x*100, sigdigits=2) for x ∈ PV]
         w = [round(100*weights[i]/wmax[i], sigdigits=2) for i ∈ 1:length(weights)]
@@ -39,6 +42,14 @@
         @series begin
             (x, y) = (F′[1, :], F′[2, :])
         end
+        # if length(h.args) > 1
+        #     for F ∈ Fs
+        #         @series begin
+        #             F = embed(M, standardise(Array(F), mean(Array(F), dims=2), StatsBase.std(Array(F), dims=2)), 1:2)
+        #             (x, y) = (F[1, :], F[2, :])
+        #         end
+        #     end
+        # end
     end
 end
 
