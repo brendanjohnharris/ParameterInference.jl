@@ -85,12 +85,20 @@ function orthonormalise(F::DimArray{Float64, 2}, dimensionalityReduction=princip
 end
 export orthonormalise
 
+function orthonormalBaseline(F::AbstractArray, dimensionalityReduction=principalComponents)
+    function 𝑏(F_test)
+        @assert size(F, 1) == size(F_test, 1)
+        F̂, M = orthonormalise(F, dimensionalityReduction)
+        F_out = embed(M, Array(F_test))
+    end
+    return 𝑏
+end
 function orthonormalBaseline(F::DimArray{Float64, 2}, dimensionalityReduction=principalComponents)
     function 𝑏(F_test)
         F_test, F = intersectFeatures(F_test, F)
         F̂, M = orthonormalise(F, dimensionalityReduction)
-        F_test = embed(M, Array(F_test))
-        F_out = Catch22.featureMatrix(F_test, [Symbol("PC$x") for x ∈ 1:size(F_test, 1)])
+        F_out = embed(M, Array(F_test))
+        F_out = Catch22.featureMatrix(F_out, [Symbol("PC$x") for x ∈ 1:size(F_out, 1)])
     end
     return 𝑏
 end
@@ -143,3 +151,76 @@ function dependencyFilter(F, threshold=0.3; metric=StatsBase.corspearman, iterat
     return F
 end
 export dependencyFilter
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                      Pick some better names                                      #
+# ------------------------------------------------------------------------------------------------ #
+
+# * We have four baselines associated with rescaling variances, plus the PCA whitening rotation that can be performed before all four rescalings
+
+# ------------------------------------------- Rescaling ------------------------------------------ #
+"""
+Standardise the test features. Alternatively, just use the normalisation field of an Inference.
+"""
+standardbaseline(F::AbstractArray) = standardise(F, 2)
+standardbaseline() = F
+export standardbaseline
+
+
+"""
+Scale the features so that the variance of a constant baseline is zero. Do this by setting mapping variances less than σₗ to 0, but keeping a gradient of 1.0 afterwards. Zscore features, zscore baseline from features and then map
+"""
+function lowbaseline(Fₗ::AbstractArray)
+    interval = x -> NonstationaryProcesses.rampOn(0, 1, x, x+1)
+    function lowscale(F::AbstractArray)
+        𝛔 = StatsBase.std(F, dims=2)
+        𝛍 = StatsBase.mean(F, dims=2)
+        F̂, F̂ₗ = intersectFeatures(F, Fₗ)
+        F̂ₗ = standardise(F̂ₗ, 𝛍, 𝛔)
+        F̂ = standardise(F, 𝛍, 𝛔)
+        𝛔 = StatsBase.std(F̂, dims=2)
+        𝛍 = StatsBase.mean(F̂, dims=2)
+        𝛔ₗ = StatsBase.std(F̂ₗ, dims=2)
+        𝛍ₗ = StatsBase.mean(F̂ₗ, dims=2)
+        𝐟 = interval.(vec(𝛔ₗ))
+        if typeof(F) <: DimArray
+            𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(F̂ₗ))
+        end
+        return F -> reScale(F, 𝐟)
+    end
+    return lowscale
+end
+export lowbaseline
+
+"""
+Scale the features so that the variance of a high dimensional baselines is unity. Do this as an inverval with a constant variance of 0.0
+"""
+function highbaseline(Fₕ::AbstractArray)
+    Fₗ = zeros(size(Fₕ))
+    hiloScale(Fₗ, Fₕ)
+end
+function highbaseline(Fₕ::DimArray)
+    Fₕ, Fₗ = intersectFeatures(Fₕ, zeros(size(Fₕ)))
+    hiloScale(Fₗ, Fₕ)
+end
+export highbaseline
+
+"""
+Scale the features so that their variances map to a rampInterval between the low (0) and high dim (1) baselines.
+"""
+function intervalbaseline(Fₗ::AbstractArray, Fₕ::AbstractArray)
+    hiloScale(Fₗ, Fₕ)
+end
+export highbaseline
+
+
+# ---------------------------------- High dim orthonormalisation --------------------------------- #
+"""
+Add this to any baseline variables and the Inference normalisation transform into the high dim. whitened space
+"""
+orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalComponents) = orthonormalBaseline(Fₕ, dimensionalityReduction)
+
+
