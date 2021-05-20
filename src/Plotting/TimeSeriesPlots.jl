@@ -51,3 +51,43 @@
         end
     end
 end
+
+# ------------------------------------------------------------------------------------------------ #
+#                              Function for plotting array of rasters                              #
+# ------------------------------------------------------------------------------------------------ #
+
+@userplot RasterArray
+@recipe function f(g::RasterArray)
+    @assert length(g.args) == 3 && typeof(g.args[3]) <: AbstractMatrix
+    seriestype := :rasterarray
+    mat = g.args[3]
+    g.args[1], g.args[2], Surface(mat)
+end
+
+@recipe function f(::Type{Val{:rasterarray}}, x, y, z)
+    # Currently only works with gr()
+    x, y, T = x, y, z.surf
+    uy = unique(y)
+    ux = unique(x)
+    yax = (sort∘unique)(y) # Must have equally spaced y's and x's
+    xax = (sort∘unique)(x)
+    P = Array{Matrix{Float64}}(undef, (length(yax), length(xax)))
+    for 😄 ∈ CartesianIndices(P)
+        (i, j) = Tuple(😄)
+        P[😄] = T[(x.==xax[j]) .& (y.==yax[i]), :]
+    end
+    P .= reshape.(P, 1, size(T, 2))
+    if size(P, 2) > 1
+        P = [hcat(P[i, :]...) for i ∈ 1:size(P, 1)]
+    end
+    if size(P, 1) > 1
+        P = vcat(P...)
+    end
+    seriestype := :heatmap
+    xlims := (0.5, size(P, 2)+0.5)
+    ylims := (0.5, size(P, 1)+0.5)
+    y := collect(1:size(P, 1))
+    x := collect(1:size(P, 2))
+    z := Surface(P)
+    ()
+end
