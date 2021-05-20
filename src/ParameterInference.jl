@@ -14,7 +14,7 @@ Base.@kwdef struct Inference
     windows = slidingWindow
     features = catch24
     baseline = _self
-    filter = nonanrows#∘noconstantrows
+    filter = nonanrows∘noconstantrows
     normalisation = _self#standardise
     dimensionalityReduction = principalComponents
     parameters = timeseries .+ NaN
@@ -23,7 +23,7 @@ Base.@kwdef struct Inference
     windowEdges = windowedTimeseries[2]
     windowCentres = (windowEdges[1:end-1] + windowEdges[2:end])./2
     F = features(windowedTimeseries[1])
-    F̂ = (normalisation∘filter∘baseline)(F)
+    F̂ = (filter∘baseline∘filter∘normalisation∘filter)(F) #! Too many filters?
     model = project(Array(F̂), dimensionalityReduction)
     F′ = embed(model, Array(F̂))
     estimates = embed(model, Array(F̂), [1])

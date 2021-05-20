@@ -55,11 +55,18 @@ end
     ξ²ₕ = sort(explainedVariance(𝑏(Fₕ)), rev=true)
     ξ² = sort(explainedVariance(𝑏(F)), rev=true)
 
+    @series begin
+        seriestype := :path
+        linestyle := :dash
+        linewidth := 2.5
+        label --> nothing
+        seriescolor --> :gray
+        (x, y) = (0:length(ξ²), LinRange(0, 1, length(ξ²)+1))
+    end
 
     @series begin
         seriestype := :path
         markersize --> 5
-        subplot := 1
         marker --> :circle
         label --> "Fₕ"
         seriescolor --> :black
@@ -69,10 +76,9 @@ end
     @series begin
         seriestype := :path
         markersize --> 5
-        subplot := 1
         marker --> :circle
         label --> "F"
-        seriescolor --> :red
+        seriescolor --> :crimson
         xguide --> "Principal Components"
         yguide --> "ξ²"
         (x, y) = (0:length(ξ²), cumsum([0.0, ξ²...]))

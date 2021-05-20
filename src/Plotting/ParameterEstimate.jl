@@ -171,171 +171,208 @@
 end
 
 
-# @userplot BaselineComparison
-# @recipe function f(P::BaselineComparison; tswindows=(length(P.args[1].timeseries) > 10000), kwargs...)
+# ------------------------------------------------------------------------------------------------ #
+#                                        Baseline Comparison                                       #
+# ------------------------------------------------------------------------------------------------ #
 
-#     𝑏 = []
+@userplot BaselineComparison
+@recipe function f(P::BaselineComparison; features=catch24, parameters=1, var=1, tswindows=(length(timeseries(P.args[1])) > 10000), orthonormalise=false)
+    S = P.args[1]
+    Fₕ = P.args[2]
+    Fₗ = P.args[3]
 
-#     cluster=false
-#     normalisef=false
-#     F = P.args[1]
-#     Fₕ = P.args[2]
-#     Fₗ = P.args[3]
-#     legend --> false
-#     #link := :x
-#     grid --> false
-#     layout --> @layout [
-#         x
-#         [a b c d]
-#         [d e f g]
-#     ]
-#     size --> (800, 500)
-#     # left_margin --> 10Plots.mm
-#     # right_margin --> 25Plots.mm
+    baselines = [
+        "Standardised"
+        "Low dim. baseline"
+        "High dim. baseline"
+        "Interval baseline"
+    ]
 
-#     windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
-# # ------------------------------------------ Time series ----------------------------------------- #
-#     t = dims(I.timeseries, Ti).val
-#     if tswindows
-#         @series begin
-#             seriestype := :tswindows
-#             subplot := 1
-#             yguide --> "Time Series"
-#             xguide := ""
-#             framestyle := :box
-#             N --> Int(round(mean((collect(I.windowEdges[2:end]) .- collect(I.windowEdges[1:end-1])))))
-#             yaxis --> nothing
-#             xaxis --> nothing
-#             top_margin --> 3Plots.mm
-#             ymax = round(max(I.timeseries...),  sigdigits=3)
-#             ymin = round(min(I.timeseries...),  sigdigits=3)
-#             annotations := [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
-#             (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
-#             xlims := extrema(t)
-#             (t, I.timeseries)
-#         end
-#     else
-#         @series begin
-#             seriestype := :path
-#             subplot := 1
-#             yguide --> "Time Series"
-#             xguide := ""
-#             framestyle := :box
-#             yaxis --> nothing
-#             xaxis --> nothing
-#             top_margin --> 3Plots.mm
-#             seriescolor := :black
-#             ymax = max(I.timeseries...)
-#             ymin = min(I.timeseries...)
-#             ymax -= 0.05*(ymax-ymin)
-#             ymin += 0.05*(ymax-ymin)
-#             ymax = round(ymax,  sigdigits=3)
-#             ymin = round(ymin,  sigdigits=3)
-#             annotations:= [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
-#             (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
-#             xlims := extrema(t)
-#             x := t
-#             y := I.timeseries
-#         end
-#     end
+    if orthonormalise
+        𝑜 = orthonormaliseto(Fₕ, principalComponents)
+        I_a = [
+            infer(S, var; parameters, features, baseline=standardbaseline(), normalisation=𝑜), # No baseline
+            infer(S, var; parameters, features, baseline=lowbaseline(𝑜(Fₗ)), normalisation=𝑜), # Low
+            infer(S, var; parameters, features, baseline=highbaseline(𝑜(Fₕ)), normalisation=𝑜), # High
+            infer(S, var; parameters, features, baseline=intervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜)  # Both
+        ]
+    else
+        I_a = [
+            infer(S, var; parameters, features, baseline=standardbaseline()), # No baseline
+            infer(S, var; parameters, features, baseline=lowbaseline(Fₗ)), # Low
+            infer(S, var; parameters, features, baseline=highbaseline(Fₕ)), # High
+            infer(S, var; parameters, features, baseline=intervalbaseline(Fₗ, Fₕ))  # Both
+        ]
+    end
+    cluster=false
+    normalisef=false
+    legend --> false
+    #link := :x
+    grid --> false
+    layout --> @layout [
+        x{0.2h}
+        [a; b] [c; d]
+        [d; e] [f; g]
+    ]
+    size --> (1000, 1000)
+    left_margin --> 20Plots.mm
+    right_margin --> 20Plots.mm
 
-# # ------------------------------------------- Features ------------------------------------------- #
-#     # Need to edit the plot attributes of this subplot in the last series of this recipe
-#     i = 1
-#     for 𝑏 ∈ 1:ℬ
-#         i += 1
-#         I = infer(S, 1; normalisation=noconstantrows∘nonanrows, baseline=𝑏, kwargs...)
-#         F = I.F̂
-#         if cluster
-#             #D = StatsBase.corspearman(F')
-#             #idxs = clusterDistances(D, linkageMetric=:average, branchOrder=:optimal)
-#             idxs = clusterPairwise(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
-#             clusterF = F[idxs, :]
-#         else
-#             ρ = (mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
-#             idxs = sortperm(ρ[:], rev=true)
-#             clusterF = F[idxs, :]
-#         end
-#         if normalisef
-#             clusterF = sigmoidNormalise(clusterF)
-#         else
-#             clusterF = normalise(clusterF, centre, 2)
-#         end
-#         @series begin
-#             seriestype := :heatmap
-#             framestyle := :box
-#             colorbar --> nothing
-#             ymax = length(ρ)+0.5
-#             ymin = 0.5
-#             ymax -= 0.05*(ymax-ymin)
-#             ymin += 0.05*(ymax-ymin)
-#             if cluster == false
-#                 ρmin = round(min(ρ...), sigdigits=3)
-#                 ρmax = round(max(ρ...), sigdigits=3)
-#                 annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
-#                             (max(dims(I.timeseries, Ti).val...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
-#             end
-#             yaxis := nothing
-#             xaxis := nothing
-#             yflip := true
-#             yguide --> "Features"
-#             framestyle := :box
-#             #xlims := extrema(dims(I.timeseries, Ti).val)
-#             ylims := (0.5, length(idxs)+0.5)
-#             subplot := i
-#             seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
-#             clim = max(abs.(extrema(clusterF))...)
-#             clims := (-clim, clim)
-#             println("The clustered features are:\n")
-#             display.(Catch22.featureDims(clusterF))
-#             #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
-#             (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
-#         end
+    # Do a quick inference for quick access to time series
+    I = infer(S, var; parameters, features, baseline=_self, normalisation=_self)
 
-#         @series begin
-#             seriestype := :path
-#             subplot := i*2-1
-#             yaxis := nothing
-#             seriescolor := :black
-#             xlims := extrema(t)
-#             (x, y) = (t, I.parameters)
-#         end
-#         pmax = round(max(I.parameters...), sigdigits=3)
-#         pmin = round(min(I.parameters...), sigdigits=3)
-#         inset_subplots := (3, bbox(0,0,1,1))
-#         @series begin
-#             seriestype := :scatter
-#             seriescolor := :black
-#             xguide --> "Time"
-#             yguide --> "Parameters"
-#             framestyle := :box
-#             yaxis := nothing
-#             xaxis := nothing
-#             background_color_inside := nothing
-#             background_color_subplot := nothing
-#             p = I.estimates
-#             if StatsBase.corspearman(p, I.parameters[Int.(windowCentres)]) < 0
-#                 @warn "It looks like the estimated parameters are the negative of the true parameters. This is not unexpected, so flipping for visualisation."
-#                 p = -p
-#             end
-#             ymax = max(p...)
-#             ymin = min(p...)
-#             ymax += 0.05*(ymax-ymin)
-#             ymin -= 0.05*(ymax-ymin)
-#             ylims := (ymin, ymax)
-#             ymax -= 0.1*(ymax-ymin)
-#             ymin += 0.1*(ymax-ymin)
-#             xs = length(p)*1.01
-#             ρₚ = round(corspearman(I.parameters[Int.(windowCentres)], I.estimates); sigdigits=3)
-#             annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
-#                             (xs, ymax, text("$pmax", :black, :left, 8)),
-#                             (xs, (ymin+ymax)/2, text("ρ = $ρₚ", :black, :left, 11))]
-#             xlims := (0, length(p)) # These go in centres of windows
+    windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
+# ------------------------------------------ Time series ----------------------------------------- #
+    t = dims(I.timeseries, Ti).val
+    if tswindows
+        @series begin
+            seriestype := :tswindows
+            subplot := 1
+            # yguide --> "Time Series"
+            xguide := ""
+            framestyle := :box
+            N --> Int(round(mean((collect(I.windowEdges[2:end]) .- collect(I.windowEdges[1:end-1])))))
+            yaxis --> nothing
+            xaxis --> nothing
+            top_margin --> 3Plots.mm
+            ymax = round(max(I.timeseries...),  sigdigits=3)
+            ymin = round(min(I.timeseries...),  sigdigits=3)
+            annotations := [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
+            (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
+            xlims := extrema(t)
+            (t, I.timeseries)
+        end
+    else
+        @series begin
+            seriestype := :path
+            subplot := 1
+            # yguide --> "Time Series"
+            xguide := ""
+            framestyle := :box
+            yaxis --> nothing
+            xaxis --> nothing
+            top_margin --> 3Plots.mm
+            seriescolor := :black
+            ymax = max(I.timeseries...)
+            ymin = min(I.timeseries...)
+            ymax -= 0.05*(ymax-ymin)
+            ymin += 0.05*(ymax-ymin)
+            ymax = round(ymax,  sigdigits=3)
+            ymin = round(ymin,  sigdigits=3)
+            annotations:= [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
+            (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
+            xlims := extrema(t)
+            x := t
+            y := I.timeseries
+        end
+    end
 
-#             (x, y) = (0.5:1:length(p)-0.5, p)
-#         end
-#     end
-# end
+# ------------------------------------------- Features ------------------------------------------- #
+    bb = [1, 5, 3, 7]
+    bbb = [2, 6, 4, 8]
+    bbbb = [9, 10, 11, 12]
+    inset_subplots := [(x+1, bbox(0,0,1,1)) for x ∈ bbb]
+    for b ∈ 1:4
+        I = I_a[b]
+        F = I.F̂
+        if cluster
+            #D = StatsBase.corspearman(F')
+            #idxs = clusterDistances(D, linkageMetric=:average, branchOrder=:optimal)
+            idxs = clusterPairwise(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
+            clusterF = F[idxs, :]
+        else
+            ρ = (mapslices(x -> corspearman(x, I.parameters[Int.(windowCentres)]), F, dims=2))
+            idxs = sortperm(ρ[:], rev=true)
+            clusterF = F[idxs, :]
+        end
+        if normalisef
+            clusterF = sigmoidNormalise(clusterF)
+        else
+            clusterF = normalise(clusterF, centre, 2)
+        end
+        @series begin
+            seriestype := :heatmap
+            framestyle := :box
+            title := baselines[b]
+            colorbar --> nothing
+            ymax = length(ρ)+0.5
+            ymin = 0.5
+            ymax -= 0.05*(ymax-ymin)
+            ymin += 0.05*(ymax-ymin)
+            if !cluster
+                ρmin = round(min(ρ...), sigdigits=3)
+                ρmax = round(max(ρ...), sigdigits=3)
+                annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
+                            (max(dims(I.timeseries, Ti).val...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
+            end
+            yaxis := nothing
+            xaxis := nothing
+            yflip := true
+            # if b == 1
+            #     yguide := "Features"
+            # end
+            framestyle := :box
+            #xlims := extrema(dims(I.timeseries, Ti).val)
+            ylims := (0.5, length(idxs)+0.5)
+            subplot := bb[b]+1
+            seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
+            clim = max(abs.(extrema(clusterF))...)
+            clims := (-clim, clim)
+            println("The clustered features are:\n")
+            display.(Catch22.featureDims(clusterF))
+            #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
+            (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
+        end
+
+        @series begin
+            seriestype := :path
+            subplot := bbb[b]+1
+            yaxis := nothing
+            seriescolor := :black
+            xlims := extrema(t)
+            (x, y) = (t, I.parameters)
+        end
+        pmax = round(max(I.parameters...), sigdigits=3)
+        pmin = round(min(I.parameters...), sigdigits=3)
+        @series begin
+            seriestype := :scatter
+            seriescolor := :black
+            # xguide --> "Time"
+            subplot := bbbb[b]+1
+            framestyle := :box
+            yaxis := nothing
+            xaxis := nothing
+            background_color_inside := nothing
+            background_color_subplot := nothing
+            p = I.estimates
+            if StatsBase.corspearman(p, I.parameters[Int.(windowCentres)]) < 0
+                @warn "It looks like the estimated parameters are the negative of the true parameters. This is not unexpected, so flipping for visualisation."
+                p = -p
+            end
+            ymax = max(p...)
+            ymin = min(p...)
+            ymax += 0.05*(ymax-ymin)
+            ymin -= 0.05*(ymax-ymin)
+            ylims := (ymin, ymax)
+            ymax -= 0.1*(ymax-ymin)
+            ymin += 0.1*(ymax-ymin)
+            xs = length(p)*1.01
+            
+            ρₚ = round(corspearman(I.parameters[Int.(windowCentres)], I.estimates); sigdigits=3)
+            markercolor := cgrad([:crimson, :forestgreen], LinRange(0, 1, 256))[round(Int, abs(ρₚ)*255)+1]
+            markerstrokewidth := 0.0
+            annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
+            (xs, ymax, text("$pmax", :black, :left, 8)),
+            (xs, (ymin+ymax)/2, text("ρ = $ρₚ", :black, :left, 8))]
+            # if bbb[b] < 5
+            #     yguide := "Parameters"
+            # end
+            xlims := (0, length(p)) # These go in centres of windows
+
+            (x, y) = (0.5:1:length(p)-0.5, p)
+        end
+    end
+end
 
 
 
