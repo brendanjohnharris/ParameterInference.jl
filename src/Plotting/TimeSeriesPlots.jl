@@ -67,6 +67,10 @@ end
 @recipe function f(::Type{Val{:rasterarray}}, x, y, z)
     # Currently only works with gr()
     x, y, T = x, y, z.surf
+    T = normalise(T, standardise, 2)
+    if size(T, 1) > size(T, 2)
+        @warn "Seems like a lot of time series, sure you didn't mean to transpose?"
+    end
     uy = unique(y)
     ux = unique(x)
     yax = (sort∘unique)(y) # Must have equally spaced y's and x's
@@ -84,6 +88,8 @@ end
         P = vcat(P...)
     end
     seriestype := :heatmap
+    xticks --> (LinRange(0, size(P, 2), length(ux)+1)[1:end-1].+size(P, 2)/length(ux)/2, ux)
+    yticks --> (1:size(P, 1), uy)
     xlims := (0.5, size(P, 2)+0.5)
     ylims := (0.5, size(P, 1)+0.5)
     y := collect(1:size(P, 1))
@@ -91,3 +97,23 @@ end
     z := Surface(P)
     ()
 end
+
+# @userplot TSRasterArray
+# @recipe function f(g::TSRasterArray)
+#     @assert length(g.args) == 3 && typeof(g.args[3]) <: AbstractMatrix
+#     seriestype := :tsrasterarray
+#     mat = g.args[3]
+#     g.args[1], g.args[2], Surface(mat)
+# end
+# @shorthands tsrasterarray
+# @userplot TSRasterArray
+# @recipe function f(g::TSRasterArray)
+#     #x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:y].surf
+#     x = g.args[1]
+#     y = g.args[2]
+#     z = g.args[3]
+#     @series begin
+#         seriestype := rasterarray
+#         (x, y, z)
+#     end
+# end
