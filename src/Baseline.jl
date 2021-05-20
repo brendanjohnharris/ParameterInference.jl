@@ -95,9 +95,9 @@ function orthonormalBaseline(F::AbstractArray, dimensionalityReduction=principal
 end
 function orthonormalBaseline(F::DimArray{Float64, 2}, dimensionalityReduction=principalComponents)
     function 𝑏(F_test)
-        F_test, F = intersectFeatures(F_test, F)
-        F̂, M = orthonormalise(F, dimensionalityReduction)
-        F_out = embed(M, Array(F_test))
+        F̂_test, F̂ = intersectFeatures(F_test, F)
+        F̂, M = orthonormalise(F̂, dimensionalityReduction)
+        F_out = embed(M, Array(F̂_test))
         F_out = Catch22.featureMatrix(F_out, [Symbol("PC$x") for x ∈ 1:size(F_out, 1)])
     end
     return 𝑏
@@ -166,7 +166,7 @@ export dependencyFilter
 Standardise the test features. Alternatively, just use the normalisation field of an Inference.
 """
 standardbaseline(F::AbstractArray) = standardise(F, 2)
-standardbaseline() = F
+standardbaseline() = F -> standardbaseline(F)
 export standardbaseline
 
 
@@ -174,13 +174,13 @@ export standardbaseline
 Scale the features so that the variance of a constant baseline is zero. Do this by setting mapping variances less than σₗ to 0, but keeping a gradient of 1.0 afterwards. Zscore features, zscore baseline from features and then map
 """
 function lowbaseline(Fₗ::AbstractArray)
-    interval = x -> NonstationaryProcesses.rampOn(0, 1, x, x+1)
+    interval = x -> NonstationaryProcesses.rampOn(0.0, 1.0, x, x+1.0)
     function lowscale(F::AbstractArray)
-        𝛔 = StatsBase.std(F, dims=2)
-        𝛍 = StatsBase.mean(F, dims=2)
         F̂, F̂ₗ = intersectFeatures(F, Fₗ)
-        F̂ₗ = standardise(F̂ₗ, 𝛍, 𝛔)
-        F̂ = standardise(F, 𝛍, 𝛔)
+        𝛔 = StatsBase.std(F̂, dims=2)
+        𝛍 = StatsBase.mean(F̂, dims=2)
+        F̂ₗ = normalise(F̂ₗ, 𝛍, 𝛔, standardise, 2)
+        F̂ = normalise(F̂, 𝛍, 𝛔, standardise, 2)
         𝛔 = StatsBase.std(F̂, dims=2)
         𝛍 = StatsBase.mean(F̂, dims=2)
         𝛔ₗ = StatsBase.std(F̂ₗ, dims=2)
@@ -189,7 +189,7 @@ function lowbaseline(Fₗ::AbstractArray)
         if typeof(F) <: DimArray
             𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(F̂ₗ))
         end
-        return F -> reScale(F, 𝐟)
+        return reScale(F̂, 𝐟)
     end
     return lowscale
 end
@@ -222,5 +222,6 @@ export highbaseline
 Add this to any baseline variables and the Inference normalisation transform into the high dim. whitened space
 """
 orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalComponents) = orthonormalBaseline(Fₕ, dimensionalityReduction)
+export orthonormaliseto
 
 
