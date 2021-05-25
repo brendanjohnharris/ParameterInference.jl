@@ -1,6 +1,9 @@
 using Catch22
 using DimensionalData
 using StatsBase
+using Colors
+using LinearAlgebra
+using ColorVectorSpace
 using Clustering
 # ------------------------------------------------------------------------------------------------ #
 #                                       Plot a feature matrix                                      #
@@ -81,3 +84,64 @@ end
         (x, y, X) = (pysafelabel.(f[idxs]), pysafelabel.(f[idxs]), Df′)
     end
 end
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         Covariance Matrix                                        #
+# ------------------------------------------------------------------------------------------------ #
+# Plot the covariance matrix in a fancy way, from either the feature matrix or a precomputed covariance matrix. Can supply featurenames as first argument, if wanted, and either a feature matrix (not square and symmetric) or a covariance matrix (square and symmetric) as arg. 2
+
+@userplot CovarianceMatrix
+@recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen])
+    @assert 1 ≤ length(g.args) ≤ 2 && typeof(g.args[end]) <: AbstractMatrix
+    if typeof(g.args[1]) <: DimArray
+        f = Catch22.featureDims(g.args[1])
+        Σ² = Array(g.args[1])
+    else
+        if length(g.args) == 2
+            f = g.args[1]
+            Σ² = g.args[2]
+        else
+            f = string.(1:size(g.args[1], 1))
+            Σ² = g.args[1]
+        end
+    end
+    if !issymmetric(Σ²)
+        Σ² = StatsBase.cov(Σ²')
+    end
+    σ⁻¹ = Diagonal(Σ²)^-1
+    r = σ⁻¹*Σ²*σ⁻¹
+    Dr = 1.0.-abs.(r)
+    idxs = Clustering.hclust(Dr; linkage=:average, branchorder=:optimal).order
+    Σ̂² = Σ²[idxs, idxs]
+    f̂ = f[idxs]
+    P = eigvecs(Array(Σ̂²))
+    P′ = unitInterval(P)
+    colours = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(P′, 1));
+    rgb = parse.(RGBA, palette);
+    rgb = [i - RGBA(0.0, 0.0, 0.0, i.alpha) for i ∈ rgb]
+    colours[1:length(rgb)] = rgb;
+    C = 0.5.*colours'*P′ .+ 0.5.*P′*colours
+    A = RGBA.((0.0,), (0.0,), (0.0,), P′)
+    Z = C + A
+    @series begin
+        seriestype := :heatmap
+        framestyle := :box
+        xticks := :none
+        colorbar := :none
+        lims := (1.0, size(Z, 1))
+        aspect_ratio := :equal
+        label := :none
+        #categorical := true
+        #seriescolor := cgrad(Z[:])
+        legend := :none
+        yticks := (LinRange(1.0, size(Z, 1), size(Z, 1)+1).+((size(Z, 1))-1)/size(Z, 1)/2, f̂)
+        grid := :none
+        (Z,)
+    end
+end
+
+# @recipe function f(::Type{Val{:covariancematrix}}, plt::AbstractPlot;)
+#     f, Σ² = plotattributes[:x], Array(plotattributes[:z])
+
+# end
