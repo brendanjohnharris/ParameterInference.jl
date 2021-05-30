@@ -33,7 +33,7 @@ function embed(M::MultivariateStats.PCA{Float64}, F::AbstractArray, PCs::Union{I
     return D
 end
 
-function embed(M::MultivariateStats.PCA{Float64}, F::DimArray{Float64}, args...; kwargs...)
+function embed(M::MultivariateStats.PCA{Float64}, F::AbstractFeatureArray{Float64}, args...; kwargs...)
     D = embed(M, Array(F), args...; kwargs...)
     Catch22.featureMatrix(D, [Symbol("PC$x") for x ∈ 1:size(D, 1)])
 end

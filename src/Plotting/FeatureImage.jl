@@ -17,14 +17,14 @@ using Clustering
     elseif length(FI.args) == 2
         F = FI.args[2]
         x = FI.args[1]
-        if typeof(F) <: DimArray
+        if typeof(F) <: AbstractFeatureArray
             y = string.(Catch22.featureDims(F))
         else
             y = string.(1:size(F, 1))
         end
     elseif length(FI.args) == 1
         F = FI.args[1]
-        if typeof(F) <: DimArray
+        if typeof(F) <: AbstractFeatureArray
             y = string.(Catch22.featureDims(F))
         else
             y = string.(1:size(F, 1))
@@ -36,7 +36,7 @@ using Clustering
         framestyle --> :box
         xaxis --> nothing
         yticks --> :all
-        seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
+        seriescolor --> cgrad(:RdYlBu_11, 7, categorical = true)
         clim = max(abs.(extrema(F))...)
         clims := (-clim, clim)
         (x, y, X) = (pysafelabel.(x), pysafelabel.(y), Array(F))
@@ -51,7 +51,7 @@ end
         f = DI.args[1]
     elseif length(DI.args) == 1
         F = DI.args[1]
-        if typeof(F) <: DimArray
+        if typeof(F) <: AbstractFeatureArray
             f = string.(Catch22.featureDims(F))
         else
             f = string.(1:size(F, 1))
@@ -62,16 +62,17 @@ end
     idxs = Clustering.hclust(Df; linkage=:average, branchorder=:optimal).order
     Df′ = Df[idxs, idxs]
 
-    #plot!(yticks=(1:size(Df, 1), replace.(string.(Catch22.featureNames[idxs]), '_'=>"\\_")), size=(800, 400), xlims=[0.5, size(Df, 1)+0.5], ylims=[0.5, size(Df, 1)+0.5], box=:on, )
+    #plot!(yticks=(1:size(Df, 1), replace.(string.(Catch22.featurenames[idxs]), '_'=>"\\_")), size=(800, 400), xlims=[0.5, size(Df, 1)+0.5], ylims=[0.5, size(Df, 1)+0.5], box=:on, )
     ann = [(x-0.5, y-0.5, text("$(round(Df′[x, y], digits=2))", :white)) for x ∈ 1:length(idxs) for y ∈ 1:length(idxs)]
 
     @series begin
         seriestype := :heatmap
         framestyle --> :box
         xaxis --> nothing
+        lims --> (0, length(idxs))
         aspect_ratio --> :equal
         size --> (800, 400)
-        if length(f) ≤ 50
+        if length(f) ≤ 60
             yticks --> :all
         end
         if annotatedist == true
@@ -94,7 +95,7 @@ end
 @userplot CovarianceMatrix
 @recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen])
     @assert 1 ≤ length(g.args) ≤ 2 && typeof(g.args[end]) <: AbstractMatrix
-    if typeof(g.args[1]) <: DimArray
+    if typeof(g.args[1]) <: AbstractFeatureArray
         f = Catch22.featureDims(g.args[1])
         Σ² = Array(g.args[1])
     else
@@ -109,20 +110,26 @@ end
     if !issymmetric(Σ²)
         Σ² = StatsBase.cov(Σ²')
     end
-    σ⁻¹ = Diagonal(Σ²)^-1
+    σ⁻¹ = sqrt(Diagonal(Σ²))^-1
     r = σ⁻¹*Σ²*σ⁻¹
     Dr = 1.0.-abs.(r)
-    idxs = Clustering.hclust(Dr; linkage=:average, branchorder=:optimal).order
-    Σ̂² = Σ²[idxs, idxs]
+    if issymmetric(Dr)
+        idxs = Clustering.hclust(Dr; linkage=:average, branchorder=:optimal).order
+    else
+        @warn "Correlation distance matrix is not symmetric, so not clustering"
+        idxs = 1:size(Dr, 1)
+    end
+    Σ̂² = Σ²[idxs, idxs] # r[idxs, idxs]#
     f̂ = f[idxs]
-    P = eigvecs(Array(Σ̂²))
-    P′ = unitInterval(P)
+    P = abs.(eigvecs(Array(Σ̂²)))
+    P′ = P./sum(P, dims=2)#unitInterval(P)
     colours = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(P′, 1));
     rgb = parse.(RGBA, palette);
     rgb = [i - RGBA(0.0, 0.0, 0.0, i.alpha) for i ∈ rgb]
-    colours[1:length(rgb)] = rgb;
-    C = 0.5.*colours'*P′ .+ 0.5.*P′*colours
-    A = RGBA.((0.0,), (0.0,), (0.0,), P′)
+    colours[1:min(length(rgb), size(P′, 1))] = rgb[1:min(length(rgb), size(P′, 1))];
+    #C = 0.5.*colours'*P′ .+ 0.5.*P′*colours
+    A = RGBA.((0.0,), (0.0,), (0.0,), Σ̂²./max(Σ̂²...))
+    C = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(A))
     Z = C + A
     @series begin
         seriestype := :heatmap
@@ -135,7 +142,7 @@ end
         #categorical := true
         #seriescolor := cgrad(Z[:])
         legend := :none
-        yticks := (LinRange(1.0, size(Z, 1), size(Z, 1)+1).+((size(Z, 1))-1)/size(Z, 1)/2, f̂)
+        yticks := (LinRange(1.0, size(Z, 1), size(Z, 1)+1)[1:end-1].+((size(Z, 1))-1)/size(Z, 1)/2, f̂)
         grid := :none
         (Z,)
     end
