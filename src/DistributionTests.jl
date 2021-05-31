@@ -14,7 +14,7 @@ end
 function testFeatureDistributions(F₁::AbstractArray, F₂::AbstractArray, test=TailedTestOfVariance; tail=:both)
     @cast p[i] := testFeatureDistributions(F₁[i, :], F₂[i, :], test; tail=tail)
 end
-function testFeatureDistributions(F₁::DimensionalArray, F₂::DimensionalArray, test=TailedTestOfVariance; tail=:both)
+function testFeatureDistributions(F₁::AbstractFeatureArray, F₂::AbstractFeatureArray, test=TailedTestOfVariance; tail=:both)
     # Intersect features before testing. In this case the test statistic returned refers to the order of the first input array. NaN means F₂ did not have a feature in F₁
     F̂₁, F̂₂ = intersectFeatures(F₁, F₂)
     p = testFeatureDistributions(Array(F̂₁), Array(F̂₂), test; tail=tail)

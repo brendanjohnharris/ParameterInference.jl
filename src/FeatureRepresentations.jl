@@ -2,6 +2,7 @@ using Catch22
 using StatsBase
 
 catch2 = FeatureSet([StatsBase.mean, StatsBase.std], [:mean, :SD], [["distribution","centre"], ["distribution","spread"]], ["Arithmetic mean", "Sample standard deviation"])
+export catch2
 
 catch24Names = vcat(:mean, :standard_deviation, Catch22.featurenames...)
 catch24 = catch2+catch22
@@ -22,7 +23,7 @@ IntFeatures = FeatureSet([CO_f1ecac,
                         CO_Embed2_Dist_tau_d_expfit_meandiff,
                         SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1])
 catch24sansInt = catch24\IntFeatures
-catch24sansIntnames = getnames(catch22sansInt)
+catch24sansIntnames = getnames(catch24sansInt)
 catch22sansInt = catch22\IntFeatures
 catch22sansIntnames = getnames(catch22sansInt)
 export catch24sansInt, catch22sansInt

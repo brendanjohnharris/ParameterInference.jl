@@ -2,7 +2,6 @@ using NonstationaryProcesses
 using ParameterInference
 using Printf
 using Plots
-using DimensionalData
 pyplot() # Is most consistent
 # In VSCode you should step through this script with ctrl+enter
 

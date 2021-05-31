@@ -1,5 +1,4 @@
 using Plots
-using DimensionalData
 using StatsBase
 import StatsBase.std
 

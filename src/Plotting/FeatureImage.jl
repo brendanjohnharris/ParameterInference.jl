@@ -1,5 +1,4 @@
 using Catch22
-using DimensionalData
 using StatsBase
 using Colors
 using LinearAlgebra
@@ -111,7 +110,7 @@ end
         Σ² = StatsBase.cov(Σ²')
     end
     σ⁻¹ = sqrt(Diagonal(Σ²))^-1
-    r = σ⁻¹*Σ²*σ⁻¹
+    r = round.(σ⁻¹*Σ²*σ⁻¹, sigdigits=10) # Don't want asymmetry because of floating point error
     Dr = 1.0.-abs.(r)
     if issymmetric(Dr)
         idxs = Clustering.hclust(Dr; linkage=:average, branchorder=:optimal).order
@@ -121,15 +120,13 @@ end
     end
     Σ̂² = Σ²[idxs, idxs] # r[idxs, idxs]#
     f̂ = f[idxs]
-    P = abs.(eigvecs(Array(Σ̂²)))
-    P′ = P./sum(P, dims=2)#unitInterval(P)
-    colours = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(P′, 1));
+    P = abs.(eigvecs(Array(Σ̂²)))[:, 1:length(palette)]
+    P̂ = P./sum(P, dims=2)#unitInterval(P)
     rgb = parse.(RGBA, palette);
-    rgb = [i - RGBA(0.0, 0.0, 0.0, i.alpha) for i ∈ rgb]
-    colours[1:min(length(rgb), size(P′, 1))] = rgb[1:min(length(rgb), size(P′, 1))];
-    #C = 0.5.*colours'*P′ .+ 0.5.*P′*colours
+    colours = [i - RGBA(0.0, 0.0, 0.0, i.alpha) for i ∈ rgb]
+    C = 0.5.*colours'*P̂ .+ 0.5.*P̂*colours
     A = RGBA.((0.0,), (0.0,), (0.0,), Σ̂²./max(Σ̂²...))
-    C = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(A))
+    #C = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(A))
     Z = C + A
     @series begin
         seriestype := :heatmap

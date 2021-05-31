@@ -26,7 +26,7 @@ function normalise(X::AbstractArray, 𝛍::AbstractArray, 𝛔::AbstractArray, f
         @cast Y[i, j] := normalise(X[i, j], f, 𝛍[i], 𝛔[i])
     end
 end
-function normalise(X::DimensionalArray, 𝛍::DimensionalArray, 𝛔::DimensionalArray, f::Function=standardise, dim::Int=2)
+function normalise(X::AbstractFeatureArray, 𝛍::AbstractFeatureArray, 𝛔::AbstractFeatureArray, f::Function=standardise, dim::Int=2)
     X, 𝛍 = intersectFeatures(X, 𝛍)
     X, 𝛔 = intersectFeatures(X, 𝛔)
     X, 𝛍 = intersectFeatures(X, 𝛍) # In case sigma is different from mu in features

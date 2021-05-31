@@ -33,7 +33,6 @@ end
 export Inference
 
 include("Baseline.jl")
-include("Features.jl")
 include("FeatureClustering.jl")
 include("FeatureRepresentations.jl")
 include("LowDimensionalProjections.jl")

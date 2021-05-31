@@ -1,4 +1,5 @@
 using StatsBase
+using Catch22
 import StatsBase.std
 
 function reStandardise(F::AbstractArray)
