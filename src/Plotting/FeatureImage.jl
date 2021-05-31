@@ -4,6 +4,38 @@ using Colors
 using LinearAlgebra
 using ColorVectorSpace
 using Clustering
+using TensorCast
+
+# function horizontal_legend(N, ax=PyPlot.gca())
+#     PyPlot.svg(true)
+#     l = PyPlot.gca().legend_
+#     # https://stackoverflow.com/questions/23689728/how-to-modify-matplotlib-legend-after-it-has-been-created
+#     defaults = Dict(:loc => l._loc,
+#         :numpoints => l.numpoints,
+#         :markerscale => l.markerscale,
+#         :scatterpoints => l.scatterpoints,
+#         :scatteryoffsets => l._scatteryoffsets,
+#         :prop => l.prop,
+#         # fontsize = None,
+#         :borderpad => l.borderpad,
+#         :labelspacing => l.labelspacing,
+#         :handlelength => l.handlelength,
+#         :handleheight => l.handleheight,
+#         :handletextpad => l.handletextpad,
+#         :borderaxespad => l.borderaxespad,
+#         :columnspacing => l.columnspacing,
+#         :ncol => N,
+#         :mode => l._mode,
+#         :shadow => l.shadow,
+#         :title => l._legend_title_box.get_visible() ? l.get_title().get_text() : nothing,
+#         :framealpha => l.get_frame().get_alpha(),
+#         :bbox_to_anchor => l.get_bbox_to_anchor()._bbox,
+#         :bbox_transform => l.get_bbox_to_anchor()._transform)
+#     PyPlot.legend(("1", "2", "3"), defaults)
+#     f = PyPlot.gcf()
+# end
+
+
 # ------------------------------------------------------------------------------------------------ #
 #                                       Plot a feature matrix                                      #
 # ------------------------------------------------------------------------------------------------ #
@@ -89,11 +121,14 @@ end
 # ------------------------------------------------------------------------------------------------ #
 #                                         Covariance Matrix                                        #
 # ------------------------------------------------------------------------------------------------ #
-# Plot the covariance matrix in a fancy way, from either the feature matrix or a precomputed covariance matrix. Can supply featurenames as first argument, if wanted, and either a feature matrix (not square and symmetric) or a covariance matrix (square and symmetric) as arg. 2
+# Plot the covariance matrix in a fancy way, from either the feature matrix or a precomputed covariance matrix. Can supply featurenames as first argument, if wanted, and either a feature matrix (not square and symmetric) or a covariance matrix (square and symmetric) as arg. 2.
+# Use pyplot()
+# colormode can be :top, :all, or :raw
 
 @userplot CovarianceMatrix
-@recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen])
+@recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen], colormode=:top)
     @assert 1 ≤ length(g.args) ≤ 2 && typeof(g.args[end]) <: AbstractMatrix
+
     if typeof(g.args[1]) <: AbstractFeatureArray
         f = Catch22.featureDims(g.args[1])
         Σ² = Array(g.args[1])
@@ -110,42 +145,82 @@ end
         Σ² = StatsBase.cov(Σ²')
     end
     σ⁻¹ = sqrt(Diagonal(Σ²))^-1
-    r = round.(σ⁻¹*Σ²*σ⁻¹, sigdigits=10) # Don't want asymmetry because of floating point error
-    Dr = 1.0.-abs.(r)
+    #r = round.(σ⁻¹*Σ²*σ⁻¹, sigdigits=10) # Don't want asymmetry because of floating point error
+    #Dr = 1.0.-abs.(r)
+    Dr = 1.0.-abs.(Σ²)
     if issymmetric(Dr)
         idxs = Clustering.hclust(Dr; linkage=:average, branchorder=:optimal).order
     else
         @warn "Correlation distance matrix is not symmetric, so not clustering"
         idxs = 1:size(Dr, 1)
     end
+
     Σ̂² = Σ²[idxs, idxs] # r[idxs, idxs]#
+    A = abs.(Σ̂²)./max(abs.(Σ̂²)...)
     f̂ = f[idxs]
-    P = abs.(eigvecs(Array(Σ̂²)))[:, 1:length(palette)]
-    P̂ = P./sum(P, dims=2)#unitInterval(P)
-    rgb = parse.(RGBA, palette);
-    colours = [i - RGBA(0.0, 0.0, 0.0, i.alpha) for i ∈ rgb]
-    C = 0.5.*colours'*P̂ .+ 0.5.*P̂*colours
-    A = RGBA.((0.0,), (0.0,), (0.0,), Σ̂²./max(Σ̂²...))
-    #C = fill(RGBA(0.0, 0.0, 0.0, 0.0), size(A))
-    Z = C + A
+    if colormode != :raw
+        if colormode == :top
+            P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:end-length(palette)+1]
+            P̂ = P./sum(P, dims=2)#unitInterval(P)
+            𝑓′ = parse.(XYZ, palette);
+        elseif colormode == :all
+            P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:1]
+            Σ̂′² = Diagonal(abs.(eigvals(Symmetric(Array(Σ̂²))))[end:-1:1])
+            P̂ = P./sum(P, dims=2)#unitInterval(P)
+            p = fill(:black, size(P, 2))
+            p[1:length(palette)] = palette
+            𝑓′ = parse.(XYZ, p);
+            [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
+        end
+
+        𝑓 = P̂*𝑓′
+        H = Array{XYZA}(undef, size(Σ̂²))
+        for (i, j) ∈ Tuple.(CartesianIndices(H))
+            J = (𝑓[i] + 𝑓[j])/2
+            H[i, j] = XYZA(J.x, J.y, J.z, A[i, j])
+        end
+        H = convert.((RGBA,), H)
+    else
+        H = abs.(Σ̂²)
+        colorbar --> true
+    end
     @series begin
         seriestype := :heatmap
-        framestyle := :box
-        xticks := :none
-        colorbar := :none
-        lims := (1.0, size(Z, 1))
-        aspect_ratio := :equal
-        label := :none
-        #categorical := true
-        #seriescolor := cgrad(Z[:])
+        (H,)
+    end
+    # Plot the dummy data and set attributes
+    @series begin
+        colorbar --> true
+        seriestype := :scatter
+        markersize := 0.0
+        label := nothing
         legend := :none
-        yticks := (LinRange(1.0, size(Z, 1), size(Z, 1)+1)[1:end-1].+((size(Z, 1))-1)/size(Z, 1)/2, f̂)
-        grid := :none
-        (Z,)
+        marker_z := [0, max(abs.(Σ²)...)]
+        if colormode != :raw
+            markercolor := :binary
+        end
+        (zeros(2), zeros(2))
+    end
+    if colormode != :raw
+        for i ∈ 1:length(palette)
+            @series begin
+                seriestype := :shape
+                label := "PC$i"
+                legend := :bottomright
+                colorbar_title := "Σ²"
+                colorbar_titlefontsize := 14
+                line_width := 20
+                xticks := :none
+                size --> (800, 400)
+                lims := (0.5, size(H, 1)+0.5)
+                aspect_ratio := :equal
+                legendfontsize := 8
+                yticks := (1:size(H, 1), pysafelabel.(String.(f̂)))
+                grid := :none
+                framestyle := :box
+                seriescolor := palette[i]
+                (Shape([0.0;], [0.0;]))
+            end
+        end
     end
 end
-
-# @recipe function f(::Type{Val{:covariancematrix}}, plt::AbstractPlot;)
-#     f, Σ² = plotattributes[:x], Array(plotattributes[:z])
-
-# end
