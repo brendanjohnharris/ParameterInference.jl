@@ -41,7 +41,7 @@ end
 @recipe function f(D::OrthonormalisedBaseline)
     F = D.args[1]
     Fₕ = D.args[2]
-    if typeof(D.args[3]) <: AbstractArray
+    if D.args[3] isa AbstractArray
         Fₗ = D.args[3]
         interval = (x, y) -> NonstationaryProcesses.rampInterval(0, 1, x, y)
         𝑏 = orthonormalHiloBaseline(Fₗ, Fₕ; interval)

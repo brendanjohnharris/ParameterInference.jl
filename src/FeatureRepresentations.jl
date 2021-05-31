@@ -36,7 +36,7 @@ export featureRepresentation
 
 
 function NonstationaryProcesses.forcemat(x::AbstractFeatureArray)
-    if typeof(x) <: AbstractFeatureVector
+    if x isa AbstractFeatureVector
         x = Catch22.featureMatrix(forcemat(Array(x)), Catch22.featureDims(x))
     end
     return x

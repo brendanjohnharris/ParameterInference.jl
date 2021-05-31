@@ -186,7 +186,7 @@ function lowbaseline(Fₗ::AbstractArray)
         𝛔ₗ = StatsBase.std(F̂ₗ, dims=2)
         𝛍ₗ = StatsBase.mean(F̂ₗ, dims=2)
         𝐟 = interval.(vec(𝛔ₗ))
-        if typeof(F) <: AbstractFeatureArray
+        if F isa AbstractFeatureArray
             𝐟 = Catch22.FeatureVector(𝐟, Catch22.featureDims(F̂ₗ))
         end
         return reScale(F̂, 𝐟)

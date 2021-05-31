@@ -58,7 +58,7 @@ end
 
 @userplot RasterArray
 @recipe function f(g::RasterArray)
-    @assert length(g.args) == 3 && typeof(g.args[3]) <: AbstractMatrix
+    @assert length(g.args) == 3 && g.args[3] isa AbstractMatrix
     seriestype := :rasterarray
     mat = g.args[3]
     g.args[1], g.args[2], Surface(mat)

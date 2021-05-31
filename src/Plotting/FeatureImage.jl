@@ -48,14 +48,14 @@ using TensorCast
     elseif length(FI.args) == 2
         F = FI.args[2]
         x = FI.args[1]
-        if typeof(F) <: AbstractFeatureArray
+        if F isa AbstractFeatureArray
             y = string.(Catch22.featureDims(F))
         else
             y = string.(1:size(F, 1))
         end
     elseif length(FI.args) == 1
         F = FI.args[1]
-        if typeof(F) <: AbstractFeatureArray
+        if F isa AbstractFeatureArray
             y = string.(Catch22.featureDims(F))
         else
             y = string.(1:size(F, 1))
@@ -82,7 +82,7 @@ end
         f = DI.args[1]
     elseif length(DI.args) == 1
         F = DI.args[1]
-        if typeof(F) <: AbstractFeatureArray
+        if F isa AbstractFeatureArray
             f = string.(Catch22.featureDims(F))
         else
             f = string.(1:size(F, 1))
@@ -127,9 +127,9 @@ end
 
 @userplot CovarianceMatrix
 @recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen], colormode=:top)
-    @assert 1 ≤ length(g.args) ≤ 2 && typeof(g.args[end]) <: AbstractMatrix
+    @assert 1 ≤ length(g.args) ≤ 2 && g.args[end] isa AbstractMatrix
 
-    if typeof(g.args[1]) <: AbstractFeatureArray
+    if g.args[1] isa AbstractFeatureArray
         f = Catch22.featureDims(g.args[1])
         Σ² = Array(g.args[1])
     else

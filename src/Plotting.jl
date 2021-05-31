@@ -3,7 +3,7 @@ using StatsBase
 import StatsBase.std
 
 function pysafelabel(s)
-    if typeof(s) <: String
+    if s isa String
         replace(s, r"_" => s"\\_")
     else
         return s

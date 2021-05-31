@@ -113,7 +113,7 @@ export embed
 
 function residualVariance(M, F::AbstractArray, nPCs::Int64)
     D = embed(M, Array(F), 1:nPCs) # Model self-embedding can be run more quickly...
-    if typeof(D) <: Vector
+    if D isa Vector
         D = D'
     end
     dD = pairwise(Euclidean(), D, D, dims=2)

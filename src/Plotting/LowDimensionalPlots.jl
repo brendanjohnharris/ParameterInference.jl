@@ -13,7 +13,7 @@
     M = project(standardise(Array(F)), method)
     F′ = embed(M, standardise(Array(F)), 1:2)
 
-    if typeof(M) <: MultivariateStats.PCA
+    if M isa MultivariateStats.PCA
         PV = principalvars(M)
         PV = PV[1:2]./sum(PV)
         wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M, 1:2), dims=1)
@@ -27,7 +27,7 @@
     end
 
 
-    if typeof(classlabels) <: Bool && classlabels
+    if classlabels isa Bool && classlabels
         classlabels = dims(F)[2].val
         uniquelabels = unique(classlabels)
 
@@ -67,7 +67,7 @@ end
     markersize --> 2
     markerstrokewidth --> 0
     size --> (600, 400)
-    if typeof(M) <: MultivariateStats.PCA
+    if M isa MultivariateStats.PCA
         PV = principalvars(M)
         PV = PV[1:3]./sum(PV)
         wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M)[:, 1:3], dims=1)
@@ -82,7 +82,7 @@ end
     end
 
 
-    if typeof(classlabels) <: Bool && classlabels
+    if classlabels isa Bool && classlabels
         classlabels = dims(F)[2].val
         uniquelabels = unique(classlabels)
 
