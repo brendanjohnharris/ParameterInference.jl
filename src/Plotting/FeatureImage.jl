@@ -65,11 +65,19 @@ using TensorCast
     @series begin
         seriestype := :heatmap
         framestyle --> :box
+        yflip --> true
         xaxis --> nothing
         yticks --> :all
-        seriescolor --> cgrad(:RdYlBu_11, 7, categorical = true)
         clim = max(abs.(extrema(F))...)
-        clims := (-clim, clim)
+        seriescolor --> palette(:Blues_9, 7)
+        if min(F...) > 0.0
+            clims := (0.0, clim)
+        elseif max(F...) < 0.0
+            clims := (-clim, 0.0)
+        else
+            clims := (-clim, clim)
+            seriescolor --> palette(:RdYlBu_11, 7)
+        end
         (x, y, X) = (pysafelabel.(x), pysafelabel.(y), Array(F))
     end
 end
@@ -100,6 +108,7 @@ end
         seriestype := :heatmap
         framestyle --> :box
         xaxis --> nothing
+        yflip --> true
         lims --> (0, length(idxs))
         aspect_ratio --> :equal
         size --> (800, 400)
@@ -158,21 +167,23 @@ end
     Σ̂² = Σ²[idxs, idxs] # r[idxs, idxs]#
     A = abs.(Σ̂²)./max(abs.(Σ̂²)...)
     f̂ = f[idxs]
+
+    N = min(length(palette), size(Σ̂², 1))
     if colormode != :raw
         if colormode == :top
-            P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:end-length(palette)+1]
-            P̂ = P./sum(P, dims=2)#unitInterval(P)
-            𝑓′ = parse.(XYZ, palette);
+            P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:end-N+1]
+            P̂ = P.^2.0./sum(P.^2.0, dims=2)#unitInterval(P)
+            # Square the loadings, since the are added in quadrature. Maybe not a completely faithful representation of the PC proportions, but shoudl get the job done.
+            𝑓′ = parse.(XYZ, palette[1:N]);
         elseif colormode == :all
             P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:1]
             Σ̂′² = Diagonal(abs.(eigvals(Symmetric(Array(Σ̂²))))[end:-1:1])
-            P̂ = P./sum(P, dims=2)#unitInterval(P)
+            P̂ = P.^2.0./sum(P.^2.0, dims=2)#unitInterval(P)
             p = fill(:black, size(P, 2))
-            p[1:length(palette)] = palette
+            p[1:N] = palette[1:N]
             𝑓′ = parse.(XYZ, p);
             [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
         end
-
         𝑓 = P̂*𝑓′
         H = Array{XYZA}(undef, size(Σ̂²))
         for (i, j) ∈ Tuple.(CartesianIndices(H))
@@ -201,26 +212,30 @@ end
         end
         (zeros(2), zeros(2))
     end
-    if colormode != :raw
-        for i ∈ 1:length(palette)
-            @series begin
-                seriestype := :shape
+    for i ∈ 1:N
+        @series begin
+            seriestype := :shape
+            if colormode != :raw
                 label := "PC$i"
-                legend := :bottomright
+                legend := :topright
                 colorbar_title := "Σ²"
                 colorbar_titlefontsize := 14
                 line_width := 20
-                xticks := :none
-                size --> (800, 400)
-                lims := (0.5, size(H, 1)+0.5)
-                aspect_ratio := :equal
-                legendfontsize := 8
-                yticks := (1:size(H, 1), pysafelabel.(String.(f̂)))
-                grid := :none
-                framestyle := :box
-                seriescolor := palette[i]
-                (Shape([0.0;], [0.0;]))
+            else
+                label := nothing
+                legend := nothing
             end
+            xticks := :none
+            size --> (800, 400)
+            yflip --> true
+            lims := (0.5, size(H, 1)+0.5)
+            aspect_ratio := :equal
+            legendfontsize := 8
+            yticks := (1:size(H, 1), pysafelabel.(String.(f̂)))
+            grid := :none
+            framestyle := :box
+            seriescolor := palette[i]
+            (Shape([0.0;], [0.0;]))
         end
     end
 end

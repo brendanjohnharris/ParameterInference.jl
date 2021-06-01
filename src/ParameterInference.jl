@@ -16,7 +16,7 @@ Base.@kwdef struct Inference
     baseline = _self
     filter = nonanrows∘noconstantrows
     normalisation = _self#standardise
-    dimensionalityReduction = principalComponents
+    dimensionalityReduction = principalcomponents
     parameters = timeseries .+ NaN
     # These you should leave to calculate
     windowedTimeseries = (windows)(timeseries)

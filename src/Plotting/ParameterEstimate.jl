@@ -20,7 +20,7 @@
 
     windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
 # ------------------------------------------ Time series ----------------------------------------- #
-    t = dims(I.timeseries, Ti).val
+    t = NonstationaryProcesses.timeDims(I.timeseries)
     if tswindows
         @series begin
             seriestype := :tswindows
@@ -91,7 +91,7 @@
         println("The clustered features are:\n")
         display.(Catch22.featureDims(clusterF))
         #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
-        (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
+        (x, y, X) = (NonstationaryProcesses.timeDims(I.timeseries)[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
     end
 
 
@@ -155,8 +155,8 @@
         if cluster == false
             ρmin = round(min(ρ...), sigdigits=3)
             ρmax = round(max(ρ...), sigdigits=3)
-            annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
-                        (max(dims(I.timeseries, Ti).val...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
+            annotations:= [(max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
+                        (max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
         end
         yaxis := nothing
         xaxis := nothing
@@ -165,7 +165,7 @@
         framestyle := :box
         #xlims := extrema(dims(I.timeseries, Ti).val)
         ylims := (0.5, length(idxs)+0.5)
-        x = dims(I.timeseries, Ti).val[I.windowEdges]
+        x = NonstationaryProcesses.timeDims(I.timeseries)[I.windowEdges]
     end
 
 end
@@ -188,13 +188,20 @@ end
         "Interval baseline"
     ]
 
-    if orthonormalise
-        𝑜 = orthonormaliseto(Fₕ, principalComponents)
+    if orthonormalise == :orthonormalise || (orthonormalise isa Bool && orthonormalise)
+        𝑜 = orthonormaliseto(Fₕ, principalcomponents)
         I_a = [
             infer(S, var; parameters, features, baseline=standardbaseline(), normalisation=𝑜), # No baseline
             infer(S, var; parameters, features, baseline=lowbaseline(𝑜(Fₗ)), normalisation=𝑜), # Low
             infer(S, var; parameters, features, baseline=highbaseline(𝑜(Fₕ)), normalisation=𝑜), # High
             infer(S, var; parameters, features, baseline=intervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜)  # Both
+        ]
+    elseif orthonormalise == :orthogonalise
+        I_a = [
+            infer(S, var; parameters, features, baseline=orthogonaliseto(standardbaseline()(Fₕ)), normalisation=standardbaseline()), # No baseline
+            infer(S, var; parameters, features, baseline=orthogonaliseto(lowbaseline(Fₗ)(Fₕ)), normalisation=lowbaseline(Fₗ)), # Low
+            infer(S, var; parameters, features, baseline=orthogonaliseto(highbaseline(Fₕ)(Fₕ)), normalisation=highbaseline(Fₕ)), # High
+            infer(S, var; parameters, features, baseline=orthogonaliseto(intervalbaseline(Fₗ, Fₕ)(Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ))  # Both
         ]
     else
         I_a = [
@@ -223,7 +230,7 @@ end
 
     windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
 # ------------------------------------------ Time series ----------------------------------------- #
-    t = dims(I.timeseries, Ti).val
+    t = NonstationaryProcesses.timeDims(I.timeseries)
     if tswindows
         @series begin
             seriestype := :tswindows
@@ -302,8 +309,8 @@ end
             if !cluster
                 ρmin = round(min(ρ...), sigdigits=3)
                 ρmax = round(max(ρ...), sigdigits=3)
-                annotations:= [(max(dims(I.timeseries, Ti).val...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
-                            (max(dims(I.timeseries, Ti).val...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
+                annotations:= [(max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
+                            (max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
             end
             yaxis := nothing
             xaxis := nothing
@@ -318,10 +325,11 @@ end
             seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
             clim = max(abs.(extrema(clusterF))...)
             clims := (-clim, clim)
-            println("The clustered features are:\n")
+            println("The clustered features are:")
             display.(Catch22.featureDims(clusterF))
+            print("\n")
             #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
-            (x, y, X) = (dims(I.timeseries, Ti).val[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
+            (x, y, X) = (NonstationaryProcesses.timeDims(I.timeseries)[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
         end
 
         @series begin

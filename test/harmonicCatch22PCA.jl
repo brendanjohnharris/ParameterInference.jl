@@ -26,7 +26,7 @@ F = standardise(F)
 F = nonanrows(F)
 
 # Projection
-M = project(F, principalComponents)
+M = project(F, principalcomponents)
 
 # Estimate # params
 σ² = residualVariance(M, F)

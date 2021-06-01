@@ -2,7 +2,7 @@
 #          Run a pca on the (time series of a) feature matrix and plot the first two PC's          #
 # ------------------------------------------------------------------------------------------------ #
 @userplot LowDim2
-@recipe function f(h::LowDim2; method=principalComponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
+@recipe function f(h::LowDim2; method=principalcomponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
     # show(size(F))
     F = h.args[1]
     # if h.args > 1
@@ -56,7 +56,7 @@ end
 
 
 @userplot LowDim3
-@recipe function f(h::LowDim3; method=principalComponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
+@recipe function f(h::LowDim3; method=principalcomponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
     # show(size(F))
     F = h.args[1]
     fs = Catch22.featureDims(F)

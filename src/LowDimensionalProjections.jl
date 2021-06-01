@@ -18,10 +18,10 @@ export project
 # ------------------------------------------------------------------------------------------------ #
 #                                                PCA                                               #
 # ------------------------------------------------------------------------------------------------ #
-function principalComponents(F::AbstractArray; pratio=1.0, kwargs...)
+function principalcomponents(F::AbstractArray; pratio=1.0, kwargs...)
     M = MultivariateStats.fit(MultivariateStats.PCA, F; pratio=pratio, kwargs...)
 end
-export principalComponents
+export principalcomponents
 
 function embed(M::MultivariateStats.PCA{Float64}, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
     P = MultivariateStats.projection(M)

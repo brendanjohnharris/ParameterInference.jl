@@ -22,7 +22,7 @@ F = standardise(F)
 F = nonanrows(F)
 
 # Projection
-M = project(Array(F), principalComponents)
+M = project(Array(F), principalcomponents)
 
 # Estimate # params
 σ² = residualVariance(M, F)
