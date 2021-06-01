@@ -73,40 +73,40 @@ export hiloScale
 # ------------------------------------------------------------------------------------------------ #
 #                                    Scale a baseline using PCA                                    #
 # ------------------------------------------------------------------------------------------------ #
-function orthonormalise(F::AbstractArray, dimensionalityReduction=principalComponents)
+function orthogonalise(F::AbstractArray, dimensionalityReduction=principalcomponents)
     M = dimensionalityReduction(F)
     F̂ = embed(M, F)
     return (F̂, M)
 end
-function orthonormalise(F::AbstractFeatureMatrix, dimensionalityReduction=principalComponents)
-    F̂, M = orthonormalise(Array(F), dimensionalityReduction)
+function orthogonalise(F::AbstractFeatureMatrix, dimensionalityReduction=principalcomponents)
+    F̂, M = orthogonalise(Array(F), dimensionalityReduction)
     F̂ = Catch22.featureMatrix(F̂, [Symbol("PC$x") for x ∈ 1:size(F̂, 1)])
     return F̂, M
 end
-export orthonormalise
+export orthogonalise
 
-function orthonormalBaseline(F::AbstractArray, dimensionalityReduction=principalComponents)
+function orthogonalBaseline(F::AbstractArray, dimensionalityReduction=principalcomponents)
     function 𝑏(F_test)
         @assert size(F, 1) == size(F_test, 1)
-        F̂, M = orthonormalise(F, dimensionalityReduction)
+        F̂, M = orthogonalise(F, dimensionalityReduction)
         F_out = embed(M, Array(F_test))
     end
     return 𝑏
 end
-function orthonormalBaseline(F::AbstractFeatureMatrix, dimensionalityReduction=principalComponents)
+function orthogonalBaseline(F::AbstractFeatureMatrix, dimensionalityReduction=principalcomponents)
     function 𝑏(F_test)
         F̂_test, F̂ = intersectFeatures(F_test, F)
-        F̂, M = orthonormalise(F̂, dimensionalityReduction)
+        F̂, M = orthogonalise(F̂, dimensionalityReduction)
         F_out = embed(M, Array(F̂_test))
         F_out = Catch22.featureMatrix(F_out, [Symbol("PC$x") for x ∈ 1:size(F_out, 1)])
     end
     return 𝑏
 end
-export orthonormalBaseline
+export orthogonalBaseline
 
 function orthonormalHiloBaseline(F::AbstractFeatureArray, ℱₗ::AbstractFeatureArray, ℱₕ::AbstractFeatureArray; interval::Function=(x, y) -> NonstationaryProcesses.rampInterval(0, 1, x, y))
     F, ℱₗ, ℱₕ = intersectFeatures(F, ℱₗ, ℱₕ) # Intersects to the feature set of F
-    ℱₕ′, M = orthonormalise(Array(ℱₕ))
+    ℱₕ′, M = orthogonalise(Array(ℱₕ))
     ℱ′ = Catch22.featureMatrix(ℱₕ′, [Symbol("PC$x") for x ∈ 1:size(ℱₕ′, 1)])
     F′ = embed(M, F)
     ℱ′ₗ = embed(M, ℱₗ)
@@ -214,14 +214,27 @@ Scale the features so that their variances map to a rampInterval between the low
 function intervalbaseline(Fₗ::AbstractArray, Fₕ::AbstractArray)
     hiloScale(Fₗ, Fₕ)
 end
-export highbaseline
-
+export intervalbaseline
 
 # ---------------------------------- High dim orthonormalisation --------------------------------- #
 """
-Add this to any baseline variables and the Inference normalisation transform into the high dim. whitened space
+Add this to any baseline variables and the Inference normalisation to transform into the high dim. whitened space
+e.g. infer(S, var; parameters, features, baseline=intervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜) # Note normalisation occurs before baseline
 """
-orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalComponents) = orthonormalBaseline(Fₕ, dimensionalityReduction)
+orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalcomponents) = orthogonalBaseline(Fₕ, dimensionalityReduction)
 export orthonormaliseto
+
+
+# ---------------------------------- High dim orthogonalisation --------------------------------- #
+"""
+Add this to a baseline after constructing a scaling baseline and using that as normalisation
+e.g. 𝑏 = intervalbaseline(Fₗ, Fₕ)
+infer(S, var; parameters, features, baseline=orthogonaliseto(𝑏(Fₕ)), normalisation=𝑏) # Note normalisation occurs before baseline
+"""
+orthogonaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalcomponents) = orthogonalBaseline(Fₕ, dimensionalityReduction)
+export orthogonaliseto
+
+
+
 
 
