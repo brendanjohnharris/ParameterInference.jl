@@ -26,7 +26,7 @@ export principalcomponents
 function embed(M::MultivariateStats.PCA{Float64}, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
     P = MultivariateStats.projection(M)
     P = P[:, PCs]
-    D = (P'*(F .- mapslices(mean, F, dims=2)))
+    D = (P'*(F .- mean(M))) # ! This is very bad: (P'*(F .- mapslices(mean, F, dims=2)))
     if size(D, 1) == 1
         D = D[:]
     end
