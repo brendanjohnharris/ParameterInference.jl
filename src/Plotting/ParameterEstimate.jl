@@ -1,3 +1,4 @@
+using HypothesisTests
 # ------------------------------------------------------------------------------------------------ #
 #                        Plot inference (consider changing to series recipe)                       #
 # ------------------------------------------------------------------------------------------------ #
@@ -202,6 +203,61 @@ end
             infer(S, var; parameters, features, baseline=orthogonaliseto(lowbaseline(Fₗ)(Fₕ)), normalisation=lowbaseline(Fₗ)), # Low
             infer(S, var; parameters, features, baseline=orthogonaliseto(highbaseline(Fₕ)(Fₕ)), normalisation=highbaseline(Fₕ)), # High
             infer(S, var; parameters, features, baseline=orthogonaliseto(intervalbaseline(Fₗ, Fₕ)(Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ))  # Both
+        ]
+    elseif orthonormalise == :ranksum_orthogonalise
+        # ! Not done ------------------------------->
+        𝑜 = orthogonaliseto(Fₕ, principalcomponents)
+        F̂ₕ, F̂ₗ = 𝑜.((Fₕ, Fₗ))
+        p = zeros(size(F̂ₕ, 1))
+        for i = 1:size(F̂ₕ, 1)
+            if all(F̂ₗ[i, :] .== F̂ₗ[i, 1]) # The low baseline is constant, so use a one-sample t-test
+                p[i] = pvalue(OneSampleTTest(F̂ₗ[i, :], F̂ₕ[i, :]))
+            else
+                p[i] = pvalue(MannWhitneyUTest(F̂ₗ[i, :], F̂ₕ[i, :]))
+            end
+        end
+        display(histogram(Fₕ))
+        show(p)
+
+        I_a = [
+            infer(S, var; parameters, features, baseline=orthogonaliseto(standardbaseline()(Fₕ)), normalisation=standardbaseline()), # No baseline
+            infer(S, var; parameters, features, baseline=orthogonaliseto(lowbaseline(Fₗ)(Fₕ)), normalisation=lowbaseline(Fₗ)), # Low
+            infer(S, var; parameters, features, baseline=orthogonaliseto(highbaseline(Fₕ)(Fₕ)), normalisation=highbaseline(Fₕ)), # High
+            infer(S, var; parameters, features, baseline=orthogonaliseto(intervalbaseline(Fₗ, Fₕ)(Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ))  # Both
+        ]
+    elseif orthonormalise == :truncate3
+        # ! Not done ------------------------------->
+        𝑜 = orthogonaliseto(Fₕ, principalcomponents)
+        F̂ₕ, F̂ₗ = 𝑜.((Fₕ, Fₗ))
+
+        idxs = partialsortperm(vec(StatsBase.std(F̂ₕ, dims=2)), 1:3, rev=true)
+        
+        F̂ₕ = F̂ₕ[idxs, :]
+        F̂ₗ = F̂ₗ[idxs, :]
+
+        I_a = [
+            infer(S, var; parameters, features, baseline=standardbaseline()∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # No baseline
+            infer(S, var; parameters, features, baseline=lowbaseline(F̂ₗ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # Low
+            infer(S, var; parameters, features, baseline=highbaseline(F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # High
+            infer(S, var; parameters, features, baseline=intervalbaseline(F̂ₗ, F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self)  # Both
+        ]
+    elseif orthonormalise == :totalcovariance
+        function projectedtotalcovariance(𝑏::Function)
+            M = principalcomponents(Array(𝑏(Fₕ)))
+            𝑜 = orthogonaliseto(𝑏(Fₕ), principalcomponents)
+            Σₕ² = StatsBase.cov(𝑏(Fₕ), dims=2)
+            T = (FeatureMatrix(Array(sum(abs.(Σₕ²), dims=2)), getnames(Σₕ²)))
+            T′ = projection(M)'*Diagonal(T[:])*projection(M) # Don't want to subtract means, just want the rotation
+            # Will want to rethink this formula, since we are now ignoring the off-diagonal terms.
+            T′ = sqrt.(diag(T′))
+            g = X -> X./T′
+            return g∘𝑜
+        end
+        I_a = [
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(standardbaseline()), normalisation=standardbaseline(), filter=_self), # No baseline
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(lowbaseline(Fₗ)), normalisation=lowbaseline(Fₗ), filter=_self), # Low
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(highbaseline(Fₕ)), normalisation=highbaseline(Fₕ), filter=_self), # High
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(intervalbaseline(Fₗ, Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ), filter=_self)  # Both
         ]
     else
         I_a = [

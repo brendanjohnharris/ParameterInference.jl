@@ -32,6 +32,9 @@ export reZero
 function reScale(x::AbstractVector, f::Function=_self)
     σ = std(x)
     σ′ = f(σ)
+    if σ′ == σ == 0.0
+        σ′ = σ = 1.0 # Catch the limit
+    end
     return σ′.*x./σ
 end
 function reScale(F::AbstractArray, f::Vector)
