@@ -1,7 +1,7 @@
 using Catch22
 using StatsBase
 
-catch2 = FeatureSet([StatsBase.mean, StatsBase.std], [:mean, :SD], [["distribution","centre"], ["distribution","spread"]], ["Arithmetic mean", "Sample standard deviation"])
+catch2 = FeatureSet([StatsBase.mean, StatsBase.std], [:mean, :standard_deviation], [["distribution","centre"], ["distribution","spread"]], ["Arithmetic mean", "Sample standard deviation"])
 export catch2
 
 catch24Names = vcat(:mean, :standard_deviation, Catch22.featurenames...)
