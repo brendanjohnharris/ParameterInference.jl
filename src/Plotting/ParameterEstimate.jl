@@ -190,7 +190,8 @@ end
     ]
 
     if orthonormalise == :orthonormalise || (orthonormalise isa Bool && orthonormalise)
-        𝑜 = orthonormaliseto(Fₕ, principalcomponents)
+        # Orthogonalise and then scale
+        𝑜 = orthogonaliseto(Fₕ, principalcomponents)
         I_a = [
             infer(S, var; parameters, features, baseline=standardbaseline(), normalisation=𝑜), # No baseline
             infer(S, var; parameters, features, baseline=lowbaseline(𝑜(Fₗ)), normalisation=𝑜), # Low
@@ -246,11 +247,11 @@ end
             M = principalcomponents(Array(𝑏(Fₕ)))
             𝑜 = orthogonaliseto(𝑏(Fₕ), principalcomponents)
             Σₕ² = StatsBase.cov(𝑏(Fₕ), dims=2)
-            T = (FeatureMatrix(Array(sum(abs.(Σₕ²), dims=2)), getnames(Σₕ²)))
+            T = Array(sum(abs.(Σₕ²), dims=2))
             T′ = projection(M)'*Diagonal(T[:])*projection(M) # Don't want to subtract means, just want the rotation
             # Will want to rethink this formula, since we are now ignoring the off-diagonal terms.
-            T′ = sqrt.(diag(T′))
-            g = X -> X./T′
+            #T′ = sqrt.(diag(T′))
+            g = X -> FeatureMatrix(inv(T′)*Array(X), getnames(X))
             return g∘𝑜
         end
         I_a = [
@@ -258,6 +259,52 @@ end
             infer(S, var; parameters, features, baseline=projectedtotalcovariance(lowbaseline(Fₗ)), normalisation=lowbaseline(Fₗ), filter=_self), # Low
             infer(S, var; parameters, features, baseline=projectedtotalcovariance(highbaseline(Fₕ)), normalisation=highbaseline(Fₕ), filter=_self), # High
             infer(S, var; parameters, features, baseline=projectedtotalcovariance(intervalbaseline(Fₗ, Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ), filter=_self)  # Both
+        ]
+    elseif orthonormalise == :dependencyscaling
+        #! This should be identical to :totalcovariance
+        function dependencyscaling(𝑏, Fₕ)
+            Fₕ′ = 𝑏(Fₕ)
+            Σₕ² = StatsBase.cov(Array(Fₕ′), dims=2)
+            𝑜 = orthogonaliseto(Fₕ′, principalcomponents)
+            𝐧 = sum(abs.(Array(Σₕ²)), dims=2)
+            N⁻¹ = FeatureMatrix(inv(sqrt(Diagonal(𝐧[:]))), getnames(Fₕ′))
+            return F -> FeatureMatrix(𝑜(N⁻¹*𝑏(F)), getnames(F))
+        end
+        I_a = [
+            infer(S, var; parameters, features, baseline=dependencyscaling(standardbaseline(), Fₕ)), # No baseline
+            infer(S, var; parameters, features, baseline=dependencyscaling(lowbaseline(Fₗ), Fₕ)), # Low
+            infer(S, var; parameters, features, baseline=dependencyscaling(highbaseline(Fₕ), Fₕ)), # High
+            infer(S, var; parameters, features, baseline=dependencyscaling(intervalbaseline(Fₗ, Fₕ), Fₕ))  # Both
+        ]
+    elseif orthonormalise == :dependencyscalingnorotation
+        #! This should be identical to :dependencyscaling
+        function dependencyscalingnorotation(𝑏, Fₕ)
+            Fₕ′ = 𝑏(Fₕ)
+            Σₕ² = StatsBase.cov(Array(Fₕ′), dims=2)
+            𝑜 = orthogonaliseto(Fₕ′, principalcomponents)
+            𝐧 = sum(abs.(Array(Σₕ²)), dims=2)
+            N⁻¹ = FeatureMatrix(inv(sqrt(Diagonal(𝐧[:]))), getnames(Fₕ′))
+            return F -> FeatureMatrix(N⁻¹*𝑏(F), getnames(F))
+        end
+        I_a = [
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(standardbaseline(), Fₕ)), # No baseline
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(lowbaseline(Fₗ), Fₕ)), # Low
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(highbaseline(Fₕ), Fₕ)), # High
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(intervalbaseline(Fₗ, Fₕ), Fₕ))  # Both
+        ]
+    elseif orthonormalise == :whiten
+        function whitento(𝑏, Fₕ)
+            Fₕ′ = 𝑏(Fₕ)
+            𝑜 = orthogonaliseto(Fₕ′, principalcomponents)
+            𝐧 = sum(abs.(Array(Σₕ²)), dims=2)
+            N⁻¹ = FeatureMatrix(inv(sqrt(Diagonal(𝐧[:]))), getnames(Fₕ′))
+            return F -> FeatureMatrix(N⁻¹*𝑏(F), getnames(F))
+        end
+        I_a = [
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(standardbaseline(), Fₕ)), # No baseline
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(lowbaseline(Fₗ), Fₕ)), # Low
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(highbaseline(Fₕ), Fₕ)), # High
+            infer(S, var; parameters, features, baseline=dependencyscalingnorotation(intervalbaseline(Fₗ, Fₕ), Fₕ))  # Both
         ]
     else
         I_a = [
