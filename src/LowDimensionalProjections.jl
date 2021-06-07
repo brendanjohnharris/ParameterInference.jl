@@ -9,9 +9,6 @@ using LinearAlgebra
 function project(F::AbstractArray, projectionFunc, args...; kwargs...)
     M = projectionFunc(F, args...; kwargs...)
 end
-function project(F::AbstractFeatureArray, projectionFunc, args...; kwargs...)
-    M = projectionFunc(Array(F), args...; kwargs...)
-end
 export project
 
 
@@ -26,18 +23,18 @@ function principalcomponents(F::AbstractArray; pratio=1.0, kwargs...)
 end
 export principalcomponents
 
-function embed(M::MultivariateStats.PCA, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
+function embed(M::MultivariateStats.PCA{Float64}, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
     P = MultivariateStats.projection(M)
     P = P[:, PCs]
-    D = (P'*(F .- mean(M)))
+    D = (P'*(F .- mean(M))) # ! This is very bad: (P'*(F .- mapslices(mean, F, dims=2)))
     if size(D, 1) == 1
         D = D[:]
     end
     return D
 end
 
-function embed(M::MultivariateStats.PCA, F::AbstractFeatureArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars); kwargs...)
-    D = embed(M, Array(F), PCs; kwargs...)
+function embed(M::MultivariateStats.PCA{Float64}, F::AbstractFeatureArray{Float64}, args...; kwargs...)
+    D = embed(M, Array(F), args...; kwargs...)
     Catch22.featureMatrix(D, [Symbol("PC$x") for x ∈ 1:size(D, 1)])
 end
 export embed
@@ -46,7 +43,7 @@ export embed
 # ------------------------------------------------------------------------------------------------ #
 #                                        Explained Variance                                        #
 # ------------------------------------------------------------------------------------------------ #
-function explainedVariance(M::MultivariateStats.PCA)
+function explainedVariance(M::MultivariateStats.PCA{Float64})
     ev = principalvars(M)
     ev = cumsum(unitL1(ev))
 end
