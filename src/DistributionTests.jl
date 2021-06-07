@@ -1,5 +1,7 @@
 using HypothesisTests
 using TensorCast
+using Bootstrap
+using StatsBase
 
 
 # Give two feature matrices, a test function (from HypothesisTests.jl) and calculate the test statistics for each feature common to the two feature matrices
@@ -36,3 +38,14 @@ function RobustTailedTestOfVariance(x::AbstractVector{T}, y::AbstractVector{T}) 
     EqualVarianceTTest(zx, zy)
 end
 export RobustTailedTestOfVariance
+
+
+
+"""
+Bootstrap to get an estimate of the standard error of a sample's standard deviation
+"""
+function bootstrapSEσ(X::AbstractVector, n=1000, sampling=BasicSampling)
+    bs = bootstrap(StatsBase.std, X, sampling(n))
+    return stderror(bs)[1]
+end
+export bootstrapSEσ
