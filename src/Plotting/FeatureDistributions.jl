@@ -4,7 +4,6 @@ using StatsPlots
 #                 Compare the distributions of features in a feature matrices                      #
 # ------------------------------------------------------------------------------------------------ #
 
-# I NEED a custom FeatureArray
 @userplot FeatureViolin
 @recipe function f(H::FeatureViolin; normalise=:feature, normtype=:mix, rightannotations=nothing)
     # if normalise is on, normalise distributions to the range of the first feature matrix but centre uniquely
@@ -95,7 +94,7 @@ end
 #                                Plot the baseline variance mapping                                #
 # ------------------------------------------------------------------------------------------------ #
 @userplot VarianceMapping
-@recipe function f(P::VarianceMapping; interval=(x, y) -> NonstationaryProcesses.rampInterval(0, 1, x, y), names=false)
+@recipe function f(P::VarianceMapping; interval=rampInterval, names=false)
     F = P.args[1]
     Fₗ = P.args[2]
     Fₕ = P.args[3]
@@ -114,16 +113,15 @@ end
     𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
     𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
     fnames = Catch22.featureDims(F)
-    𝐟 = interval.(vec(𝛔ₗ), vec(𝛔ₕ))
+    𝐟 = interval.(Fₗ, Fₕ, F)
     𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(Fₗ))
     (F, 𝐟) = intersectFeatures(F, 𝐟)
-    𝛔 = std(F, dims=2)
 
     xx = -0.1:0.01:1.1
     f₁ = interval(0.0, 1.0)
     yy = f₁.(xx)
-    𝛔ᵣ = [𝐟[s, 1](𝛔[s, 1]) for s ∈ fnames]
-    #𝛔ᵣ[𝛔ₕ .< 2.0*𝛔ₗ, :] .= 0.0 # Will need a better threshold
+    𝛔ᵣ = [𝐟[s, 1](F[s, :]) for s ∈ fnames]
+
     @series begin
         seriescolor --> :black
         linewidth --> 3
@@ -151,3 +149,31 @@ end
 
 
 end
+
+
+@userplot IntervalScaling
+@recipe function f(P::IntervalScaling; interval=rampInterval, reftoramp=true)
+    σₗ = 0.0
+    σₕ = 100.0
+    fl = rand(1, 1000).*σₗ
+    fh = rand(1, 1000).*σₕ
+
+    𝛔 = LinRange(σₗ, σₕ, 10000)
+    f = [rand(1, 20).*𝛔[i] for i ∈ 1:length(𝛔)]
+    x = StatsBase.std.(f)
+    y = [interval(fl, fh, f[i])[1](f[i]) for i ∈ 1:length(x)]
+    @series begin
+        seriestype := :line
+        label --> nothing
+        (x, y)
+    end
+    if reftoramp
+        @series begin
+            seriestype := :line
+            label := nothing#"Ramp Interval"
+            seriescolor := :black
+            (x, [rampInterval(fl, fh, f[i])[1](f[i]) for i ∈ 1:length(x)])
+        end
+    end
+end
+

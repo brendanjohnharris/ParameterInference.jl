@@ -1,4 +1,5 @@
 module ParameterInference
+using Catch22: timeseriesDims
 using NonstationaryProcesses
 
 # windows:      x -> Array of windows

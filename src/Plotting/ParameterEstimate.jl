@@ -306,6 +306,15 @@ end
             infer(S, var; parameters, features, baseline=dependencyscalingnorotation(highbaseline(Fₕ), Fₕ)), # High
             infer(S, var; parameters, features, baseline=dependencyscalingnorotation(intervalbaseline(Fₗ, Fₕ), Fₕ))  # Both
         ]
+    elseif orthonormalise == :errororthonormalise
+            # Orthogonalise and then scale, but using the error interval for the high and zero dim scaling
+            𝑜 = orthogonaliseto(Fₕ, principalcomponents)
+            I_a = [
+                infer(S, var; parameters, features, baseline=standardbaseline(), normalisation=𝑜), # No baseline
+                infer(S, var; parameters, features, baseline=lowbaseline(𝑜(Fₗ)), normalisation=𝑜), # Low
+                infer(S, var; parameters, features, baseline=highbaseline(𝑜(Fₕ)), normalisation=𝑜), # High
+                infer(S, var; parameters, features, baseline=errorintervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜)  # Both
+            ]
     else
         I_a = [
             infer(S, var; parameters, features, baseline=standardbaseline()), # No baseline

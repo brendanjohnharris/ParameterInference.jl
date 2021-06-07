@@ -31,7 +31,7 @@ export reZero
 # ------------------------------------------------------------------------------------------------ #
 function reScale(x::AbstractVector, f::Function=_self)
     σ = std(x)
-    σ′ = f(σ)
+    σ′ = f(Array(x))
     if σ′ == σ == 0.0
         σ′ = σ = 1.0 # Catch the limit
     end
@@ -48,30 +48,28 @@ function reScale(F::AbstractFeatureArray, f::AbstractFeatureVector)
     (Fᵣ, fᵣ) = intersectFeatures(F, f) # Assumes fᵣ has all of the features of Fᵣ
     reScale(Fᵣ, vec(fᵣ))
 end
-function hiloScale(Fₗ::Array{Float64, 2}, Fₕ::Array{Float64, 2},
-                    interval::Function=(x, y) -> NonstationaryProcesses.rampInterval(0, 1, x, y))
-    # interval gives a function of σ, the test variance, with parameters σₗ and σₕ
+
+function NonstationaryProcesses.rampInterval(Fₗ, Fₕ, F)
+    𝛔ₗ, 𝛔ₕ = std(Array(Fₗ), dims=2), std(Array(Fₕ), dims=2)
+    𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
+    𝐟 = [𝐟 -> rampInterval(0.0, 1.0, 𝛔ₗ[i], 𝛔ₕ[i])(std(𝐟)) for i ∈ 1:size(F, 1)]
+end
+
+function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::Array{Float64, 2},
+                    interval::Function=rampInterval)
     if size(Fₗ, 1) != size(Fₕ, 1)
         error("High and low dimensional baselines do not have the same number of features")
     end
-    𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
-    𝐟 = interval.(vec(𝛔ₗ), vec(𝛔ₕ))
-    return F -> reScale(F, 𝐟)
+    return F -> reScale(F, interval(Fₗ, Fₕ, F))
 end
-function hiloScale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
-    interval::Function=(x, y) -> NonstationaryProcesses.rampInterval(0, 1, x, y))
-    # interval gives a function of σ, the test variance, with parameters σₗ and σₕ
+function intervalscale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
+    interval::Function=rampInterval)
     if any(Catch22.featureDims(Fₗ) .!= Catch22.featureDims(Fₕ))
         error("High and low dimensional baselines do not have the same features")
     end
-    𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
-    𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
-    #𝛔ₕ[𝛔ₕ .< 2.0*𝛔ₗ] .= Inf # Will need a better threshold
-    𝐟 = interval.(vec(𝛔ₗ), vec(𝛔ₕ))
-    𝐟 = Catch22.featureVector(𝐟, Catch22.featureDims(Fₗ))
-    return F -> reScale(F, 𝐟)
+    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(Fₗ)))
 end
-export hiloScale
+export intervalscale
 
 # ------------------------------------------------------------------------------------------------ #
 #                                    Scale a baseline using PCA                                    #
@@ -113,7 +111,7 @@ function orthonormalHiloBaseline(F::AbstractFeatureArray, ℱₗ::AbstractFeatur
     ℱ′ = Catch22.featureMatrix(ℱₕ′, [Symbol("PC$x") for x ∈ 1:size(ℱₕ′, 1)])
     F′ = embed(M, F)
     ℱ′ₗ = embed(M, ℱₗ)
-    𝑏′ = hiloScale(Array(ℱ′ₗ), Array(ℱₕ′), interval)
+    𝑏′ = intervalscale(Array(ℱ′ₗ), Array(ℱₕ′), interval)
     return 𝑏′(F′)
 end
 orthonormalHiloBaseline(ℱₗ::AbstractFeatureArray, ℱₕ::AbstractFeatureArray; kwargs...) = F -> orthonormalHiloBaseline(F, ℱₗ, ℱₕ; kwargs...)
@@ -158,9 +156,6 @@ export dependencyFilter
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                      Pick some better names                                      #
-# ------------------------------------------------------------------------------------------------ #
 
 # * We have four baselines associated with rescaling variances, plus the PCA whitening rotation that can be performed before all four rescalings
 
@@ -203,11 +198,11 @@ Scale the features so that the variance of a high dimensional baselines is unity
 """
 function highbaseline(Fₕ::AbstractArray)
     Fₗ = zeros(size(Fₕ))
-    hiloScale(Fₗ, Fₕ)
+    intervalscale(Fₗ, Fₕ)
 end
 function highbaseline(Fₕ::AbstractFeatureArray)
     Fₕ, Fₗ = intersectFeatures(Fₕ, zeros(size(Fₕ)))
-    hiloScale(Fₗ, Fₕ)
+    intervalscale(Fₗ, Fₕ)
 end
 export highbaseline
 
@@ -215,17 +210,17 @@ export highbaseline
 Scale the features so that their variances map to a rampInterval between the low (0) and high dim (1) baselines.
 """
 function intervalbaseline(Fₗ::AbstractArray, Fₕ::AbstractArray)
-    hiloScale(Fₗ, Fₕ)
+    intervalscale(Fₗ, Fₕ)
 end
 export intervalbaseline
 
-# ---------------------------------- High dim orthonormalisation --------------------------------- #
-"""
-Add this to any baseline variables and the Inference normalisation to transform into the high dim. whitened space
-e.g. infer(S, var; parameters, features, baseline=intervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜) # Note normalisation occurs before baseline
-"""
-orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalcomponents) = orthogonalBaseline(Fₕ, dimensionalityReduction)
-export orthonormaliseto
+# # ---------------------------------- High dim orthonormalisation --------------------------------- #
+# """
+# Add this to any baseline variables and the Inference normalisation to transform into the high dim. whitened space
+# e.g. infer(S, var; parameters, features, baseline=intervalbaseline(𝑜(Fₗ), 𝑜(Fₕ)), normalisation=𝑜) # Note normalisation occurs before baseline
+# """
+# orthonormaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalcomponents) = orthogonalBaseline(Fₕ, dimensionalityReduction)
+# export orthonormaliseto
 
 
 # ---------------------------------- High dim orthogonalisation --------------------------------- #
@@ -236,6 +231,47 @@ infer(S, var; parameters, features, baseline=orthogonaliseto(𝑏(Fₕ)), normal
 """
 orthogonaliseto(Fₕ::AbstractArray, dimensionalityReduction=principalcomponents) = orthogonalBaseline(Fₕ, dimensionalityReduction)
 export orthogonaliseto
+
+
+
+"""
+Interval scaling informed by distributions. The idea is to decrease the scale of a feature if we are unsure of its location between the high and zero dim distributions
+"""
+function significanceinterval(Fₗ, Fₕ, F)
+    𝐟 = rampInterval(Fₗ, Fₕ, F)
+    𝑝₀ = [f -> pvalue(VarianceFTest(Fₗ[i, :], f), tail=:right) for i ∈ 1:size(Fₗ, 1)]
+    𝑝ₕ = [f -> pvalue(VarianceFTest(Fₕ[i, :], f), tail=:left) for i ∈ 1:size(Fₕ, 1)]
+    function out(f, i)
+        𝐟[i](f[:]).*𝑝₀[i](f[:]).*𝑝ₕ[i](f[:])
+    end
+    return [f -> out(f, i) for i ∈ 1:size(𝐟, 1)]
+end
+export significanceinterval
+
+
+"""
+errorintervalscaling
+"""
+function errorintervalscaling(Fₗ, Fₕ, F)
+    𝐟 = rampInterval(Fₗ, Fₕ, F)
+    function out(f, i)
+        Δ = rampInterval(0.0, 1.0, 0.0, 1.0)(bootstrapSEσ(f[:])/(std(Fₕ[i, :]) - std(Fₗ[i, :]))) # So it saturates at extremes
+        𝐟[i](f[:])*(1 - Δ)
+    end
+    return [f -> out(f, i) for i ∈ 1:size(𝐟, 1)]
+end
+export errorintervalscaling
+
+
+"""
+Scale the features so that their variances map to a rampInterval between the low (0) and high dim (1) baselines.
+"""
+function errorintervalbaseline(Fₗ::AbstractArray, Fₕ::AbstractArray)
+    intervalscale(Fₗ, Fₕ, errorintervalscaling)
+end
+export errorintervalbaseline
+
+
 
 
 
