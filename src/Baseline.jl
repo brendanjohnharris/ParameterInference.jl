@@ -31,7 +31,7 @@ export reZero
 # ------------------------------------------------------------------------------------------------ #
 function reScale(x::AbstractVector, f::Function=_self)
     σ = std(x)
-    σ′ = f(Array(x))
+    σ′ = f(x)
     if σ′ == σ == 0.0
         σ′ = σ = 1.0 # Catch the limit
     end
@@ -183,7 +183,7 @@ function lowbaseline(Fₗ::AbstractArray)
         𝛍 = StatsBase.mean(F̂, dims=2)
         𝛔ₗ = StatsBase.std(F̂ₗ, dims=2)
         𝛍ₗ = StatsBase.mean(F̂ₗ, dims=2)
-        𝐟 = interval.(vec(𝛔ₗ))
+        𝐟 = [x -> interval(σ)(StatsBase.std(x)) for σ ∈ 𝛔ₗ][:]
         if F isa AbstractFeatureArray
             𝐟 = Catch22.FeatureVector(𝐟, Catch22.featureDims(F̂ₗ))
         end
