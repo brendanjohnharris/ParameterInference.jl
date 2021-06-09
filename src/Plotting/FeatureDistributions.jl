@@ -153,8 +153,16 @@ end
 
 @userplot IntervalScaling
 @recipe function f(P::IntervalScaling; interval=rampInterval, reftoramp=true)
-    σₗ = 0.0
-    σₕ = 100.0
+    if length(P.args) > 0 # It's evolving, but backwards
+        σₗ = P.args[1]
+    else
+        σₗ = 0.0
+    end
+    if length(P.args) > 1
+        σₕ = P.args[2]
+    else
+        σₕ = π
+    end
     fl = rand(1, 1000).*σₗ
     fh = rand(1, 1000).*σₕ
 
@@ -162,18 +170,23 @@ end
     f = [rand(1, 20).*𝛔[i] for i ∈ 1:length(𝛔)]
     x = StatsBase.std.(f)
     y = [interval(fl, fh, f[i])[1](f[i]) for i ∈ 1:length(x)]
-    @series begin
-        seriestype := :line
-        label --> nothing
-        (x, y)
-    end
     if reftoramp
         @series begin
             seriestype := :line
-            label := nothing#"Ramp Interval"
-            seriescolor := :black
+            label --> nothing#"Ramp Interval"
+            linewidth --> 2.5
+            seriescolor --> :black
             (x, [rampInterval(fl, fh, f[i])[1](f[i]) for i ∈ 1:length(x)])
         end
+    end
+    @series begin
+        seriestype := :line
+        seriescolor := crimson
+        linewidth --> 2.5
+        label --> nothing
+        xguide --> "σ"
+        yguide --> "σ̂"
+        (x, y)
     end
 end
 

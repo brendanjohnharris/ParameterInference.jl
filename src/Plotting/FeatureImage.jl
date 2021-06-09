@@ -135,7 +135,7 @@ end
 # colormode can be :top, :all, or :raw
 
 @userplot CovarianceMatrix
-@recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen], colormode=:top)
+@recipe function f(g::CovarianceMatrix;  metric=StatsBase.cor, palette=[:cornflowerblue, :crimson, :forestgreen], colormode=:top, revcolorbar=false)
     @assert 1 ≤ length(g.args) ≤ 2 && g.args[end] isa AbstractMatrix
 
     if g.args[1] isa AbstractFeatureArray
@@ -208,7 +208,7 @@ end
         legend := :none
         marker_z := [0, max(abs.(Σ²)...)]
         if colormode != :raw
-            markercolor := :binary
+            markercolor := cgrad(:binary, rev=revcolorbar)
         end
         (zeros(2), zeros(2))
     end

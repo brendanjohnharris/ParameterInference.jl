@@ -1,23 +1,37 @@
 @userplot DimensionalityEstimate
 @recipe function f(D::DimensionalityEstimate)
-    I = D.args[1]
+    if D.args[1] isa Inference
+        I = D.args[1]
+        M = I.model
+        F = Array(I.F̂)
+    else
+        F = Array(D.args[1])
+        if length(D.args) > 2
+            model = D.args[2]
+        else
+            model = principalcomponents
+        end
+        M = model(F)
+    end
+    σ² = residualVariance(M, F)
+    ξ² = explainedVariance(M)
+
     legend --> false
     #link := :x
-    right_margin --> 10Plots.mm
+    bottom_margin --> 20Plots.mm
+    left_margin --> 20Plots.mm
     grid --> false
     size --> (1000, 400)
     framestyle := :box
     layout --> @layout [ev rv]
 
-    σ² = residualVariance(I.model, I.F̂)
-    ξ² = explainedVariance(I.model)
     @series begin
         seriestype := :path
         markersize --> 5
         subplot := 1
         marker --> :circle
         label --> nothing
-        seriescolor --> :black
+        seriescolor --> cornflowerblue
         xguide --> "Principal Components"
         yguide --> "Residual Variance"
         (x, y) = (0:length(σ²), [1, σ²...])
@@ -29,7 +43,7 @@
         subplot := 2
         marker --> :circle
         label --> nothing
-        seriescolor --> :red
+        seriescolor --> crimson
         xguide --> "Principal Components"
         yguide --> "Explained Variance"
         (x, y) = (0:length(ξ²), [0, ξ²...])

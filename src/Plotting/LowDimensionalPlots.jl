@@ -155,3 +155,40 @@ end
         end
     end
 end
+
+@userplot BaselineScatters
+@recipe function f(h::BaselineScatters; ellipsealpha=0.2, doscatter=true, grouplabels=false)
+    F = h.args[1:end]
+
+    seriestype := :scatter
+
+    color_palette = [:cornflowerblue, :crimson, :forestgreen]
+    color_palette --> color_palette
+    for i = 1:length(h.args)
+        @series begin
+            markerstrokewidth --> 0
+            label := nothing
+            seriescolor --> color_palette[i]
+            markeralpha --> exp(-0.002*size(F[i], 2))
+            (x, y) = (F[i][1, :], F[i][2, :])
+        end
+        @series begin
+            seriesalpha := ellipsealpha
+            seriescolor := color_palette[i]
+            seriestype := :shape
+            if grouplabels isa Array
+                label := grouplabels[i]
+            else
+                label := grouplabels
+            end
+            linewidth := 2
+            linecolor := color_palette[i]
+            linealpha := 1.0
+            framestyle --> :box
+            μ, S = StatsPlots._covellipse_args(Array.((mean(F[i], dims=2)[:], cov((F[i]), dims=2))); n_std=1.5)
+            θ = range(0, 2π; length=1000)
+            A = S * [cos.(θ)'; sin.(θ)']
+            (μ[1] .+ A[1,:], μ[2] .+ A[2,:])
+        end
+    end
+end
