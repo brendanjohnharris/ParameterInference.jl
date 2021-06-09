@@ -5,10 +5,11 @@ import PlotThemes._themes
 #    https://medialab.github.io/iwanthue/
 # and:
 #    https://chir.ag/projects/name-that-color/
-const cornflowerblue = colorant"cornflowerblue"
-const crimson = colorant"crimson"
-const cucumber = colorant"#77ab58"
-const copper = colorant"#c37940"
+const cornflowerblue = colorant"cornflowerblue"; export cornflowerblue
+const crimson = colorant"crimson"; export crimson
+const cucumber = colorant"#77ab58"; export cucumber
+const copper = colorant"#c37940"; export copper
+const dark = colorant"#282C34"; export dark
 
 dark_palette = [
     cornflowerblue,
@@ -21,7 +22,10 @@ dark_palette = [
 _themes[:transparentdark] = PlotThemes.PlotTheme(
     bg = colorant"#282C34",
     bginside = colorant"#282C34",
-    fg = colorant"#ADB2B7",
+    fg = colorant"#FFFFFF",
+    fg_axis = colorant"#FFFFFF",
+    foreground_color_border = colorant"#FFFFFF",
+    foreground_color_text = colorant"#FFFFFF",
     fgtext = colorant"#FFFFFF",
     fgguide = colorant"#FFFFFF",
     fglegend = colorant"#FFFFFF",
