@@ -5,7 +5,7 @@ using LinearAlgebra
 #                Plot some toy distributions to get a feel for the variance mappings               #
 # ------------------------------------------------------------------------------------------------ #
 @userplot MapDistributionVariance
-@recipe function f(V::MapDistributionVariance; distributioncolors=[:black, :crimson, :cornflowerblue], ellipsealpha=0.2, doscatter=true)
+@recipe function f(V::MapDistributionVariance; distributioncolors=[:black, :crimson, :cornflowerblue], ellipsealpha=0.2, doscatter=true, ellipsetype=:gaussianisosurface)
     D = V.args[1:3] # Should be D, Dₗ, Dₕ
     if length(V.args) == 4
         b = V.args[4]
@@ -15,7 +15,7 @@ using LinearAlgebra
         b = nothing
     end
     framestyle --> :box
-    labels = ["Test", "Low Dim.", "High Dim."]
+    labels = ["Test", "Zero Dim.", "High Dim."]
     aspect_ratio --> :equal
     #axis --> nothing
     N = 200
@@ -36,7 +36,9 @@ using LinearAlgebra
             end
         end
         @series begin
-            title --> "Raw"
+            if ~isnothing(b)
+                title --> "Raw"
+            end
             subplot := 1
             seriesalpha := ellipsealpha
             seriescolor := distributioncolors[i]
@@ -45,13 +47,18 @@ using LinearAlgebra
             linewidth := 2
             linecolor := distributioncolors[i]
             linealpha := 1.0
-            𝛉 = range(0, 2π; length=100) # From StatsPlots CovEllipse
-            #A = cov(D[i]) * [cos.(θ)'; sin.(θ)'] # This COVARIANCE, which is a bit pointless in data space
-            # With a bit of rearranging we can get an SD shape, which will scale with the data
-            r = [sqrt.([cos(θ); sin(θ)]'*cov(D[i])*[cos(θ); sin(θ)]) for θ ∈ 𝛉]
-            x = r.*cos.(𝛉)
-            y = r.*sin.(𝛉)
-            (x, y)
+            if ellipsetype == :stdisosurface
+                𝛉 = range(0, 2π; length=100)
+                r = [sqrt.([cos(θ); sin(θ)]'*cov(D[i])*[cos(θ); sin(θ)]) for θ ∈ 𝛉]
+                x = r.*cos.(𝛉)
+                y = r.*sin.(𝛉)
+                (x, y)
+            else
+                μ, S = StatsPlots._covellipse_args(Array.((mean(D[i])[:], cov(D[i]))); n_std=1.5)
+                θ = range(0, 2π; length=1000)
+                A = S * [cos.(θ)'; sin.(θ)']
+                (μ[1] .+ A[1,:], μ[2] .+ A[2,:])
+            end
         end
     end
 
@@ -79,11 +86,18 @@ using LinearAlgebra
                 linewidth := 2
                 linecolor := distributioncolors[i]
                 linealpha := 1.0
-                𝛉 = range(0, 2π; length=100)
-                r = [sqrt.([cos(θ); sin(θ)]'*cov(D[i])*[cos(θ); sin(θ)]) for θ ∈ 𝛉]
-                x = r.*cos.(𝛉)
-                y = r.*sin.(𝛉)
-                (x.*v[1], y.*v[2])
+                if ellipsetype == :stdisosurface
+                    𝛉 = range(0, 2π; length=100)
+                    r = [sqrt.([cos(θ); sin(θ)]'*cov(D[i])*[cos(θ); sin(θ)]) for θ ∈ 𝛉]
+                    x = r.*cos.(𝛉)
+                    y = r.*sin.(𝛉)
+                    (x.*v[1], y.*v[2])
+                else
+                    μ, S = StatsPlots._covellipse_args(Array.((mean(D[i])[:], cov(D[i]))); n_std=1.5)
+                    θ = range(0, 2π; length=1000)
+                    A = S * [cos.(θ)'; sin.(θ)']
+                    (μ[1] .+ A[1,:].*v[1], μ[2] .+ A[2,:].*v[2])
+                end
             end
         end
     end
