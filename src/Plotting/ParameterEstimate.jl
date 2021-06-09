@@ -5,7 +5,7 @@ using HypothesisTests
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
 @userplot ParameterEstimate
-@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000), normalisef=true)
+@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000), normalisef=true, textcolor=:white, featurecolor=cgrad(:RdYlBu_11, 7, categorical = true))
     I = P.args[1]
     legend --> false
     #link := :x
@@ -35,8 +35,8 @@ using HypothesisTests
             top_margin --> 3Plots.mm
             ymax = round(max(I.timeseries...),  sigdigits=3)
             ymin = round(min(I.timeseries...),  sigdigits=3)
-            annotations := [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
-            (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
+            annotations := [(max(t...)*1.01, ymin, text("$ymin", textcolor, :left, 8)),
+            (max(t...)*1.01, ymax, text("$ymax", textcolor, :left, 8))]
             xlims := extrema(t)
             (t, I.timeseries)
         end
@@ -57,8 +57,8 @@ using HypothesisTests
             ymin += 0.05*(ymax-ymin)
             ymax = round(ymax,  sigdigits=3)
             ymin = round(ymin,  sigdigits=3)
-            annotations:= [(max(t...)*1.01, ymin, text("$ymin", :black, :left, 8)),
-            (max(t...)*1.01, ymax, text("$ymax", :black, :left, 8))]
+            annotations:= [(max(t...)*1.01, ymin, text("$ymin",  textcolor, :left, 8)),
+            (max(t...)*1.01, ymax, text("$ymax", textcolor, :left, 8))]
             xlims := extrema(t)
             x := t
             y := I.timeseries
@@ -86,7 +86,7 @@ using HypothesisTests
     @series begin
         seriestype := :heatmap
         subplot := 2
-        seriescolor := cgrad(:RdYlBu_11, 7, categorical = true)
+        seriescolor := featurecolor
         clim = max(abs.(extrema(clusterF))...)
         clims := (-clim, clim)
         println("The clustered features are:\n")
@@ -134,9 +134,9 @@ using HypothesisTests
         ymin += 0.1*(ymax-ymin)
         xs = length(p)*1.01
         ρₚ = round(corspearman(I.parameters[Int.(windowCentres)], I.estimates); sigdigits=3)
-        annotations:= [(xs, ymin, text("$pmin", :black, :left, 8)),
-                        (xs, ymax, text("$pmax", :black, :left, 8)),
-                        (xs, (ymin+ymax)/2, text("ρ = $ρₚ", :black, :left, 11))]
+        annotations:= [(xs, ymin, text("$pmin", textcolor, :left, 8)),
+                        (xs, ymax, text("$pmax", textcolor, :left, 8)),
+                        (xs, (ymin+ymax)/2, text("ρ = $ρₚ", textcolor, :left, 11))]
         xlims := (0, length(p)) # These go in centres of windows
 
         (x, y) = (0.5:1:length(p)-0.5, p)
@@ -156,8 +156,8 @@ using HypothesisTests
         if cluster == false
             ρmin = round(min(ρ...), sigdigits=3)
             ρmax = round(max(ρ...), sigdigits=3)
-            annotations:= [(max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01, ymax, text("ρ = $ρmin", :black, :left, 8)),
-                        (max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01,  ymin, text("ρ = $ρmax", :black, :left, 8))]
+            annotations:= [(max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01, ymax, text("ρ = $ρmin", textcolor, :left, 8)),
+                        (max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01,  ymin, text("ρ = $ρmax", textcolor, :left, 8))]
         end
         yaxis := nothing
         xaxis := nothing
