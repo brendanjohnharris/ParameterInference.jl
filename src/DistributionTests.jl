@@ -1,5 +1,5 @@
 using HypothesisTests
-using TensorCast
+using Tullio
 using Bootstrap
 using StatsBase
 
@@ -14,7 +14,7 @@ function testFeatureDistributions(𝐟₁::AbstractVector, 𝐟₂::AbstractVect
     p = pvalue(test(𝐟₁, 𝐟₂); tail=tail)
 end
 function testFeatureDistributions(F₁::AbstractArray, F₂::AbstractArray, test=TailedTestOfVariance; tail=:both)
-    @cast p[i] := testFeatureDistributions(F₁[i, :], F₂[i, :], test; tail=tail)
+    @tullio p[i] := testFeatureDistributions(F₁[i, :], F₂[i, :], test; tail=tail)
 end
 function testFeatureDistributions(F₁::AbstractFeatureArray, F₂::AbstractFeatureArray, test=TailedTestOfVariance; tail=:both)
     # Intersect features before testing. In this case the test statistic returned refers to the order of the first input array. NaN means F₂ did not have a feature in F₁

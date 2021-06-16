@@ -4,7 +4,7 @@ using Colors
 using LinearAlgebra
 using ColorVectorSpace
 using Clustering
-using TensorCast
+using Tullio
 
 # function horizontal_legend(N, ax=PyPlot.gca())
 #     PyPlot.svg(true)

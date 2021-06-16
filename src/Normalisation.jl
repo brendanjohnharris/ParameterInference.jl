@@ -1,6 +1,6 @@
 using Statistics
 using StatsBase
-using TensorCast
+using Tullio
 # ------------------------------------------------------------------------------------------------ #
 #                             Functions for normalising feature vectors                            #
 # ------------------------------------------------------------------------------------------------ #
@@ -21,9 +21,9 @@ end
 function normalise(X::AbstractArray, 𝛍::AbstractArray, 𝛔::AbstractArray, f::Function=standardise, dim::Int=2)
     # Need a generalised mapslices
     if dim == 1
-        @cast Y[i, j] := normalise(X[i, j], f, 𝛍[j], 𝛔[j]) # Beautiful
+        @tullio Y[i, j] := normalise(X[i, j], f, 𝛍[j], 𝛔[j])
     elseif dim == 2
-        @cast Y[i, j] := normalise(X[i, j], f, 𝛍[i], 𝛔[i])
+        @tullio Y[i, j] := normalise(X[i, j], f, 𝛍[i], 𝛔[i])
     end
 end
 function normalise(X::AbstractFeatureArray, 𝛍::AbstractFeatureArray, 𝛔::AbstractFeatureArray, f::Function=standardise, dim::Int=2)
@@ -58,9 +58,9 @@ function robustNormalise(X::AbstractArray, f::Function=standardise, dim::Int=2, 
 end
 function robustNormalise(X::AbstractArray, 𝛍::AbstractArray, 𝛔::AbstractArray, f::Function=standardise, dim::Int=2)
     if dim == 1
-        @cast Y[i, j] := robustNormalise(X[i, j], f, 𝛍[j], 𝛔[j])
+        @tullio Y[i, j] := robustNormalise(X[i, j], f, 𝛍[j], 𝛔[j])
     elseif dim == 2
-        @cast Y[i, j] := robustNormalise(X[i, j], f, 𝛍[i], 𝛔[i])
+        @tullio Y[i, j] := robustNormalise(X[i, j], f, 𝛍[i], 𝛔[i])
     end
 end
 export robustNormalise
