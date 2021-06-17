@@ -45,7 +45,7 @@ function reScale(F::AbstractArray, f::Vector)
    return F′
 end
 function reScale(F::AbstractFeatureArray, f::AbstractFeatureVector)
-    (Fᵣ, fᵣ) = intersectFeatures(F, f) # Assumes fᵣ has all of the features of Fᵣ
+    (Fᵣ, fᵣ) = intersectFeatures(F, f) # Assumes f has all of the features of F
     reScale(Fᵣ, vec(fᵣ))
 end
 
@@ -67,7 +67,7 @@ function intervalscale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
     if any(Catch22.featureDims(Fₗ) .!= Catch22.featureDims(Fₕ))
         error("High and low dimensional baselines do not have the same features")
     end
-    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(Fₗ)))
+    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
 end
 export intervalscale
 
@@ -270,6 +270,29 @@ function errorintervalbaseline(Fₗ::AbstractArray, Fₕ::AbstractArray)
     intervalscale(Fₗ, Fₕ, errorintervalscaling)
 end
 export errorintervalbaseline
+
+
+
+
+"""
+What's this?
+"""
+# Total covariance correction
+function dependencyscalingnorotation(𝑏, Fₕ)
+    Fₕ′ = 𝑏(Fₕ)
+    function g(F)
+        F′, Fₕ′ = intersectFeatures(noconstantrows(F), Fₕ′)
+        # Fₕ′, F′ = intersectFeatures(noconstantrows(Fₕ′), F′)
+        Σₕ² = StatsBase.cov(Array(Fₕ′), dims=2)
+        𝑜 = orthogonaliseto(Fₕ′, principalcomponents)
+        𝐧 = sum(abs.(Array(Σₕ²)), dims=2)
+        𝐧[𝐧 .== 0] .= Inf
+        N⁻¹ = FeatureMatrix(inv(sqrt(Diagonal(𝐧[:]))), getnames(Fₕ′))
+        return FeatureMatrix(N⁻¹*𝑏(F), getnames(F′))
+    end
+    return g
+end
+export dependencyscalingnorotation
 
 
 

@@ -5,7 +5,7 @@ using HypothesisTests
 # This one takes a time series and moves all the way through to esimation, plotting relevant stuff
 # Plots best in pyplot()
 @userplot ParameterEstimate
-@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000), normalisef=true, textcolor=:white, featurecolor=cgrad(:RdYlBu_11, 7, categorical = true))
+@recipe function f(P::ParameterEstimate; cluster=false, tswindows=(length(P.args[1].timeseries) > 10000), normalisef=false, textcolor=:black, featurecolor=cgrad(:RdYlBu_11, 7, categorical = true))
     I = P.args[1]
     legend --> false
     #link := :x
