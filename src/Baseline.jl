@@ -1,6 +1,7 @@
 using StatsBase
 using Catch22
 import StatsBase.std
+using LinearAlgebra
 
 function reStandardise(F::AbstractArray)
     idxs = vec(nanrows(F) .| constantrows(F))
