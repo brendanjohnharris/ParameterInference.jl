@@ -20,4 +20,5 @@ include("Plotting/StatisticalFilter.jl")
 include("Plotting/ToyVarianceMaps.jl")
 include("Plotting/FeatureImage.jl")
 include("Plotting/transparentdark.jl")
+include("Plotting/FeatureResponses.jl")
 
