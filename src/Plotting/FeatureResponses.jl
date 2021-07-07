@@ -3,11 +3,14 @@ using Plots
 
 # Window a time series and plot a feature
 @shorthands featurepath
-@recipe function f(::Type{Val{:featurepath}}, x, y, z; features=catch24, windows=slidingWindow(length(x)÷20))
+@recipe function f(::Type{Val{:featurepath}}, x, y, z; features=catch24, windows=slidingWindow(length(x)÷20), zscore=false)
     # x is time, y is time series
     X, t = windows(y)
     t = x[t]
     F = features(X)
+    if zscore
+        F = standardise(F)
+    end
 
     seriestype := :path
     framestyle --> :box
