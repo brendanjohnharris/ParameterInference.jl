@@ -188,7 +188,10 @@ end
         println(size(P̂))
         println(size(𝑓′))
         println(size(𝑓))
-        @tullio 𝑓[i] = P̂[i, j]*𝑓′[j] # P̂*𝑓′
+        for ii ∈ 1:length(𝑓)
+            𝑓[ii] = sum([P̂[ii, jj]*𝑓′[jj] for jj ∈ 1:length(𝑓′)])
+        end
+        #@tullio 𝑓[i] = P̂[i, j]*𝑓′[j] # P̂*𝑓′
 
         H = Array{Colors.XYZA}(undef, size(Σ̂²))
         for (i, j) ∈ Tuple.(CartesianIndices(H))
