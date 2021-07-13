@@ -184,7 +184,7 @@ end
             𝑓′ = parse.(Colors.XYZ, p);
             [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
         end
-        𝑓 = similar(𝑓′)
+        𝑓 = Vector{eltype(𝑓′)}(undef, size(P̂, 1))
         println(size(P̂))
         println(size(𝑓′))
         println(size(𝑓))
