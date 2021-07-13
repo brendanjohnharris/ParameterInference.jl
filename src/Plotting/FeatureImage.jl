@@ -185,6 +185,9 @@ end
             [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
         end
         𝑓 = similar(𝑓′)
+        println(size(P̂))
+        println(size(𝑓′))
+        println(size(𝑓))
         @tullio 𝑓[i] = P̂[i, j]*𝑓′[j] # P̂*𝑓′
 
         H = Array{Colors.XYZA}(undef, size(Σ̂²))
