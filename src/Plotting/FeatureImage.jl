@@ -184,7 +184,8 @@ end
             𝑓′ = parse.(Colors.XYZ, p);
             [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
         end
-        𝑓 = P̂*𝑓′
+        @tullio 𝑓[i] := P̂[i, j]*𝑓′[j] # P̂*𝑓′
+
         H = Array{Colors.XYZA}(undef, size(Σ̂²))
         for (i, j) ∈ Tuple.(CartesianIndices(H))
             J = (𝑓[i] + 𝑓[j])/2
