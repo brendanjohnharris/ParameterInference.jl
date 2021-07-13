@@ -173,24 +173,24 @@ end
         if colormode == :top
             P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:end-N+1]
             P̂ = P.^2.0./sum(P.^2.0, dims=2)#unitInterval(P)
-            # Square the loadings, since the are added in quadrature. Maybe not a completely faithful representation of the PC proportions, but shoudl get the job done.
-            𝑓′ = parse.(XYZ, palette[1:N]);
+            # Square the loadings, since they are added in quadrature. Maybe not a completely faithful representation of the PC proportions, but should get the job done.
+            𝑓′ = parse.(Colors.XYZ, palette[1:N]);
         elseif colormode == :all
             P = abs.(eigvecs(Symmetric(Array(Σ̂²))))[:, end:-1:1]
             Σ̂′² = Diagonal(abs.(eigvals(Symmetric(Array(Σ̂²))))[end:-1:1])
             P̂ = P.^2.0./sum(P.^2.0, dims=2)#unitInterval(P)
             p = fill(:black, size(P, 2))
             p[1:N] = palette[1:N]
-            𝑓′ = parse.(XYZ, p);
+            𝑓′ = parse.(Colors.XYZ, p);
             [𝑓′[i] = Σ̂′²[i, i]*𝑓′[i] for i ∈ 1:length(𝑓′)]
         end
         𝑓 = P̂*𝑓′
-        H = Array{XYZA}(undef, size(Σ̂²))
+        H = Array{Colors.XYZA}(undef, size(Σ̂²))
         for (i, j) ∈ Tuple.(CartesianIndices(H))
             J = (𝑓[i] + 𝑓[j])/2
-            H[i, j] = XYZA(J.x, J.y, J.z, A[i, j])
+            H[i, j] = Colors.XYZA(J.x, J.y, J.z, A[i, j])
         end
-        H = convert.((RGBA,), H)
+        H = convert.((Colors.RGBA,), H)
     else
         H = abs.(Σ̂²)
         colorbar --> true

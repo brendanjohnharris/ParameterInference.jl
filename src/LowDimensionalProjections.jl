@@ -132,3 +132,4 @@ function residualVariance(dF::Array, dD::Array{Float64, 2})
     # Sqrt of 1 minus the correlation between distances in feature space and the low dimensional space, squared
 end
 export residualVariance
+
