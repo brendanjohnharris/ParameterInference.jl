@@ -34,16 +34,16 @@ function normalise(X::AbstractFeatureArray, 𝛍::AbstractFeatureArray, 𝛔::Ab
 end
 export normalise
 
-unitInterval(x::AbstractVector{Float64}) = normalise(x, standardise, min(x...), abs(-(extrema(x)...)))
-unitInterval(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(unitInterval, X, dims=dim)
+unitInterval(x::AbstractVector) = normalise(x, standardise, min(x...), abs(-(extrema(x)...)))
+unitInterval(X::AbstractMatrix, dim::Int=2) = mapslices(unitInterval, X, dims=dim)
 export unitInterval
 
-standardise(x::AbstractVector{Float64}, args...) = normalise(x, standardise, args...)
-standardise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+standardise(x::AbstractVector, args...) = normalise(x, standardise, args...)
+standardise(X::AbstractMatrix, dim::Int=2) = mapslices(standardise, X, dims=dim)
 export standardise
 
-sigmoidNormalise(x::AbstractVector{Float64}, args...) = normalise(x, logistic, args...)
-sigmoidNormalise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(sigmoidNormalise, X, dims=dim)
+sigmoidNormalise(x::AbstractVector, args...) = normalise(x, logistic, args...)
+sigmoidNormalise(X::AbstractMatrix, dim::Int=2) = mapslices(sigmoidNormalise, X, dims=dim)
 export sigmoidNormalise
 
 
@@ -63,28 +63,34 @@ function robustNormalise(X::AbstractArray, 𝛍::AbstractArray, 𝛔::AbstractAr
         @tullio Y[i, j] := robustNormalise(X[i, j], f, 𝛍[i], 𝛔[i])
     end
 end
+# function robustNormalise(X::AbstractFeatureArray, 𝛍::AbstractFeatureArray, 𝛔::AbstractFeatureArray, f::Function=standardise, dim::Int=2)
+#     X, 𝛍 = intersectFeatures(X, 𝛍)
+#     X, 𝛔 = intersectFeatures(X, 𝛔)
+#     X, 𝛍 = intersectFeatures(X, 𝛍) # In case sigma is different from mu in features
+#     robustNormalise(X, vec(𝛍), vec(𝛔), f, dim)
+# end
 export robustNormalise
 
-robustStandardise(x::AbstractVector{Float64}, args...) = robustNormalise(x, standardise, args...)
-robustStandardise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(standardise, X, dims=dim)
+robustStandardise(x::AbstractVector, args...) = robustNormalise(x, standardise, args...)
+robustStandardise(X::AbstractMatrix, dim::Int=2) = mapslices(standardise, X, dims=dim)
 export robustStandardise
 
-robustSigmoidNormalise(x::AbstractVector{Float64}, args...) = robustNormalise(x, logistic, args...)
-robustSigmoidNormalise(X::AbstractArray{Float64, 2}, dim::Int=2) = mapslices(robustSigmoidNormalise, X, dims=dim)
+robustSigmoidNormalise(x::AbstractVector, args...) = robustNormalise(x, logistic, args...)
+robustSigmoidNormalise(X::AbstractMatrix, dim::Int=2) = mapslices(robustSigmoidNormalise, X, dims=dim)
 export robustSigmoidNormalise
 
 # ------------------------------------ Scale to L1 unit vector ----------------------------------- #
-unitL1(x::AbstractVector{Float64}) = x./sum(x)
-unitL1(X::AbstractArray{Float64, 2}) = mapslices(unitL1, X, dims=2)
+unitL1(x::AbstractVector) = x./sum(x)
+unitL1(X::AbstractMatrix) = mapslices(unitL1, X, dims=2)
 export unitL1
 
 
 # ------------------------------------ Scale to unit interval ------------------------------------ #
-# function unitInterval(x::AbstractVector{Float64})
+# function unitInterval(x::AbstractVector)
 #     y = x .- min(x...)
 #     y = y./max(y...)
 # end
-# unitInterval(X::AbstractArray{Float64, 2}) = mapslices(unitInterval, X, dims=2)
+# unitInterval(X::AbstractMatrix) = mapslices(unitInterval, X, dims=2)
 # export unitInterval
 
 
@@ -116,6 +122,11 @@ function nanrows(F::AbstractArray)
 end
 export nanrows
 
+function infrows(F::AbstractArray)
+    idxs = any(isinf.(Array(F)), dims=2)
+end
+export nanrows
+
 function nonanrows(F::AbstractArray)
     idxs = nanrows(F)
     if any(idxs)
@@ -125,6 +136,16 @@ function nonanrows(F::AbstractArray)
     return F
 end
 export nonanrows
+
+function noinfrows(F::AbstractArray)
+    idxs = infrows(F)
+    if any(idxs)
+        @warn "$(+(idxs...)) Inf rows are being removed"
+        return F[collect(.!idxs)[:], :]
+    end
+    return F
+end
+export noinfrows
 
 function nonans(F::AbstractVector)
     idxs = isnan.(Array(F))
@@ -143,3 +164,9 @@ function nomissing(F::AbstractVector)
     return F[.!idxs]
 end
 export nomissing
+
+function noinf(F::AbstractVector)
+    idxs = isinf.(Array(F))
+    return F[.!idxs]
+end
+export noinf

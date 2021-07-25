@@ -15,12 +15,9 @@ end
 export project
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                                 .                                                #
-# ------------------------------------------------------------------------------------------------ #
-# ------------------------------------------------------------------------------------------------ #
-#                                                PCA                                               #
-# ------------------------------------------------------------------------------------------------ #
+"""
+PCA
+"""
 function principalcomponents(F::AbstractArray; pratio=1.0, kwargs...)
     M = MultivariateStats.fit(MultivariateStats.PCA, F; pratio=pratio, kwargs...)
 end
@@ -43,9 +40,9 @@ end
 export embed
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                        Explained Variance                                        #
-# ------------------------------------------------------------------------------------------------ #
+"""
+Explained Variance
+"""
 function explainedVariance(M::MultivariateStats.PCA)
     ev = principalvars(M)
     ev = cumsum(unitL1(ev))
@@ -61,9 +58,10 @@ function explainedVariance(F::AbstractArray)
 end
 
 export principalvars
-# ------------------------------------------------------------------------------------------------ #
-#                                          Feature Weights                                         #
-# ------------------------------------------------------------------------------------------------ #
+
+"""
+Weights on features
+"""
 function PCfeatureWeights(model::MultivariateStats.PCA, pc=1:outdim(model))
     P = projection(model)[:, pc]
 end
@@ -75,12 +73,9 @@ export PCfeatureWeights
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                                 .                                                #
-# ------------------------------------------------------------------------------------------------ #
-# ------------------------------------------------------------------------------------------------ #
-#                                              Isomap                                              #
-# ------------------------------------------------------------------------------------------------ #
+"""
+Isomap
+"""
 function isomap(F::AbstractArray; maxoutdim=size(F, 1)÷2, kwargs...)
     # Strange bug here; cant have the maxoutdim too high otherwise:
     #ERROR: DomainError with -8.109628524266554e-10:
@@ -132,4 +127,3 @@ function residualVariance(dF::Array, dD::Array{Float64, 2})
     # Sqrt of 1 minus the correlation between distances in feature space and the low dimensional space, squared
 end
 export residualVariance
-
