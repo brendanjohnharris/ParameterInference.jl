@@ -9,6 +9,7 @@ const cornflowerblue = colorant"cornflowerblue"; export cornflowerblue
 const crimson = colorant"crimson"; export crimson
 const cucumber = colorant"#77ab58"; export cucumber
 const copper = colorant"#c37940"; export copper
+const fuchsia = colorant"#be5ea7"; export fuschia
 const dark = colorant"#282C34"; export dark
 
 dark_palette = [
