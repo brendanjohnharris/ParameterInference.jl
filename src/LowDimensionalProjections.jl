@@ -76,7 +76,7 @@ export PCfeatureWeights
 """
 Isomap
 """
-function isomap(F::AbstractArray; maxoutdim=size(F, 1)÷2, kwargs...)
+function isomap(F::AbstractArray; maxoutdim=max(size(F, 1)÷2, 10), kwargs...)
     # Strange bug here; cant have the maxoutdim too high otherwise:
     #ERROR: DomainError with -8.109628524266554e-10:
     #sqrt will only return a complex result if called with a complex argument. Try sqrt(Complex(x)).

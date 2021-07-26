@@ -23,7 +23,7 @@ Base.@kwdef struct Inference
     windowedTimeseries = (windows)(timeseries)
     windowEdges = windowedTimeseries[2]
     windowCentres = (windowEdges[1:end-1] + windowEdges[2:end])./2
-    F = ((features isa AbstractArray) ? features : features(windowedTimeseries[1])) # Maybe you supplied some pre-computed features?
+    F = (!(features isa AbstractFeatureSet) && !(features isa Vector{Function}) ? features : features(windowedTimeseries[1])) # Maybe you supplied some pre-computed features?
     F̂ = (filter∘baseline∘filter∘normalisation∘filter)(F) #! Too many filters?
     model = project(Array(F̂), dimensionalityReduction)
     F′ = embed(model, Array(F̂))
