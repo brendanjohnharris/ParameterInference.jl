@@ -24,6 +24,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 TransferEntropy = "ea221983-52f3-5440-99c7-13ea201cd633"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
+WordCloud = "6385f0a0-cb03-45b6-9089-4e0acc74b26b"
 
 [compat]
 Bootstrap = "2"

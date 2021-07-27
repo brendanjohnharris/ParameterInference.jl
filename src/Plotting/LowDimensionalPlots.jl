@@ -17,8 +17,8 @@ import StatsBase.cov
     if M isa MultivariateStats.PCA
         PV = principalvars(M)
         PV = PV[1:2]./sum(PV)
-        wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M, 1:2), dims=1)
-        weights, fis = findmax(PCfeatureWeights(M)[:, 1:2], dims=1)
+        wmax = mapslices(x -> sum(abs.(x)), featureweights(M, 1:2), dims=1)
+        weights, fis = findmax(featureweights(M)[:, 1:2], dims=1)
         PV = [round(x*100, sigdigits=2) for x ∈ PV]
         w = [round(100*weights[i]/wmax[i], sigdigits=2) for i ∈ 1:length(weights)]
         #xguide --> "$(PV[1])% Variance ($(w[1])% $(fs[fis[1]]))"
@@ -71,8 +71,8 @@ end
     if M isa MultivariateStats.PCA
         PV = principalvars(M)
         PV = PV[1:3]./sum(PV)
-        wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M)[:, 1:3], dims=1)
-        weights, fis = findmax(PCfeatureWeights(M)[:, 1:3], dims=1)
+        wmax = mapslices(x -> sum(abs.(x)), featureweights(M)[:, 1:3], dims=1)
+        weights, fis = findmax(featureweights(M)[:, 1:3], dims=1)
         PV = [round(x*100, sigdigits=2) for x ∈ PV]
         w = [round(100*weights[i]/wmax[i], sigdigits=2) for i ∈ 1:length(weights)]
         #xguide --> "$(PV[1])% Variance ($(w[1])% $(fs[fis[1]]))"
@@ -115,8 +115,8 @@ end
     # if M isa MultivariateStats.PCA
     #     PV = principalvars(M)
     #     PV = PV[1:2]./sum(PV)
-    #     wmax = mapslices(x -> sum(abs.(x)), PCfeatureWeights(M, 1:2), dims=1)
-    #     weights, fis = findmax(PCfeatureWeights(M)[:, 1:2], dims=1)
+    #     wmax = mapslices(x -> sum(abs.(x)), featureweights(M, 1:2), dims=1)
+    #     weights, fis = findmax(featureweights(M)[:, 1:2], dims=1)
     #     PV = [round(x*100, sigdigits=2) for x ∈ PV]
     #     w = [round(100*weights[i]/wmax[i], sigdigits=2) for i ∈ 1:length(weights)]
     #     #xguide --> "$(PV[1])% Variance ($(w[1])% $(fs[fis[1]]))"

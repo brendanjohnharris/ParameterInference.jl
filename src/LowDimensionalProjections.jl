@@ -62,14 +62,14 @@ export principalvars
 """
 Weights on features
 """
-function PCfeatureWeights(model::MultivariateStats.PCA, pc=1:outdim(model))
+function featureweights(model::MultivariateStats.PCA, pc=1:outdim(model))
     P = projection(model)[:, pc]
 end
-function PCfeatureWeights(I::Inference, pc::Int=1)
+function featureweights(I::Inference, pc::Int=1)
     P = projection(I.model)
     Catch22.featureVector(P[:, pc], val(dims(I.F̂, :feature)))
 end
-export PCfeatureWeights
+export featureweights
 
 
 
