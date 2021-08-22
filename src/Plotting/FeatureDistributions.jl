@@ -54,7 +54,12 @@ using StatsPlots
 
     fnames = replace.(String.(Catch22.featureDims(F)),  '_'=>"\\_")
 
-    tickfontrotation --> 90
+    if backend() !== Plots.PyPlotBackend()
+        rotation --> 90
+        bottom_margin --> 10Plots.cm
+    else
+        tickfontrotation --> 90
+    end
     size --> (700, 900)
     legend := false
 
@@ -189,4 +194,3 @@ end
         (x, y)
     end
 end
-

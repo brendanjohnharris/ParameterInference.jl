@@ -6,7 +6,7 @@ We want to take a FeatureSet and and vector of weights for a PC and produce a wo
 """
 function lowdimwordcloud(𝑓::FeatureSet, weights::AbstractVector; path="../Figures/$(rand(UInt16)).svg")
     @assert length(𝑓) == length(weights)
-    wc = wordcloud(𝑓, weights; colors=:seaborn_dark, angles = 0, maskshape=squircle, outline=false, backgroundcolor = (1, 1, 1), font="Arial Medium", masksize=(1000, 400), density=0.1)
+    wc = wordcloud(𝑓, weights; colors=:seaborn_dark, angles = 0, maskshape=squircle, outline=false, backgroundcolor = (1, 1, 1), font="Arial Medium", masksize=(1000, 400))
     generate!(wc)
     paint(wc, path)
     return wc

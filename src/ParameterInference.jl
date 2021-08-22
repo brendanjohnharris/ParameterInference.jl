@@ -42,6 +42,8 @@ include("Plotting.jl")
 include("Windows.jl")
 include("DistributionTests.jl")
 include("Information.jl")
+include("BaselineFilter.jl")
+include("BoxCox.jl")
 
 function infer(x::AbstractVector; kwargs...)
     Inference(timeseries=x; kwargs...)

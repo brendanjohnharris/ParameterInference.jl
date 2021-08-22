@@ -5,6 +5,8 @@ version = "0.1.0"
 
 [deps]
 Bootstrap = "e28b5b4c-05e8-5b66-bc03-6f0c0a0a06e0"
+BoxCoxTrans = "4c24c29e-1bf7-59e2-a6c7-e500a6482ce4"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
 Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
@@ -24,7 +26,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 TransferEntropy = "ea221983-52f3-5440-99c7-13ea201cd633"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
-WordCloud = "6385f0a0-cb03-45b6-9089-4e0acc74b26b"
+YeoJohnsonTrans = "bde5d4e9-ba51-5a47-b2d1-b5088a182367"
 
 [compat]
 Bootstrap = "2"
