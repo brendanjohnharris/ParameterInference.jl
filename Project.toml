@@ -30,6 +30,7 @@ YeoJohnsonTrans = "bde5d4e9-ba51-5a47-b2d1-b5088a182367"
 
 [compat]
 Bootstrap = "2"
+CSV = "0.8"
 Clustering = "0.14"
 ColorVectorSpace = "0.9"
 Colors = "0.12"
