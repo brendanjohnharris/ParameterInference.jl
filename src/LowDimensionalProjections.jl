@@ -21,6 +21,7 @@ PCA
 function principalcomponents(F::AbstractArray; pratio=1.0, kwargs...)
     M = MultivariateStats.fit(MultivariateStats.PCA, F; pratio=pratio, kwargs...)
 end
+principalcomponents(F::AbstractFeatureArray, args...; kwargs...) = principalcomponents(Array(F), args...; kwargs...)
 export principalcomponents
 
 function embed(M::MultivariateStats.PCA, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
@@ -32,6 +33,8 @@ function embed(M::MultivariateStats.PCA, F::AbstractArray, PCs::Union{Int, Vecto
     end
     return D
 end
+
+export PCA
 
 function embed(M::MultivariateStats.PCA, F::AbstractFeatureArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars); kwargs...)
     D = embed(M, Array(F), PCs; kwargs...)
@@ -93,6 +96,7 @@ function embed(M::ManifoldLearning.Isomap, F::AbstractArray, PCs::Union{Int, Vec
     end
     return D
 end
+export Isomap
 # If you just want the original data transformed, this is slightly faster:
 function embed(M::ManifoldLearning.Isomap, PCs::Union{Int, Vector{Int64}, UnitRange}=1:ManifoldLearning.outdim(M))
     D = ManifoldLearning.transform(M)
