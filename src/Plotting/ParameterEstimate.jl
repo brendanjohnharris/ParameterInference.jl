@@ -232,15 +232,15 @@ end
         F̂ₕ, F̂ₗ = 𝑜.((Fₕ, Fₗ))
 
         idxs = partialsortperm(vec(StatsBase.std(F̂ₕ, dims=2)), 1:3, rev=true)
-        
+
         F̂ₕ = F̂ₕ[idxs, :]
         F̂ₗ = F̂ₗ[idxs, :]
 
         I_a = [
-            infer(S, var; parameters, features, baseline=standardbaseline()∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # No baseline
-            infer(S, var; parameters, features, baseline=lowbaseline(F̂ₗ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # Low
-            infer(S, var; parameters, features, baseline=highbaseline(F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self), # High
-            infer(S, var; parameters, features, baseline=intervalbaseline(F̂ₗ, F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=_self)  # Both
+            infer(S, var; parameters, features, baseline=standardbaseline()∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=identity), # No baseline
+            infer(S, var; parameters, features, baseline=lowbaseline(F̂ₗ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=identity), # Low
+            infer(S, var; parameters, features, baseline=highbaseline(F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=identity), # High
+            infer(S, var; parameters, features, baseline=intervalbaseline(F̂ₗ, F̂ₕ)∘(X -> X[idxs, :]), normalisation=orthogonaliseto(Fₕ), filter=identity)  # Both
         ]
     elseif orthonormalise == :totalcovariance
         function projectedtotalcovariance(𝑏::Function)
@@ -255,10 +255,10 @@ end
             return g∘𝑜
         end
         I_a = [
-            infer(S, var; parameters, features, baseline=projectedtotalcovariance(standardbaseline()), normalisation=standardbaseline(), filter=_self), # No baseline
-            infer(S, var; parameters, features, baseline=projectedtotalcovariance(lowbaseline(Fₗ)), normalisation=lowbaseline(Fₗ), filter=_self), # Low
-            infer(S, var; parameters, features, baseline=projectedtotalcovariance(highbaseline(Fₕ)), normalisation=highbaseline(Fₕ), filter=_self), # High
-            infer(S, var; parameters, features, baseline=projectedtotalcovariance(intervalbaseline(Fₗ, Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ), filter=_self)  # Both
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(standardbaseline()), normalisation=standardbaseline(), filter=identity), # No baseline
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(lowbaseline(Fₗ)), normalisation=lowbaseline(Fₗ), filter=identity), # Low
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(highbaseline(Fₕ)), normalisation=highbaseline(Fₕ), filter=identity), # High
+            infer(S, var; parameters, features, baseline=projectedtotalcovariance(intervalbaseline(Fₗ, Fₕ)), normalisation=intervalbaseline(Fₗ, Fₕ), filter=identity)  # Both
         ]
     elseif orthonormalise == :dependencyscaling
         #! This should be identical to :totalcovariance
@@ -338,7 +338,7 @@ end
     right_margin --> 20Plots.mm
 
     # Do a quick inference for quick access to time series
-    I = infer(S, var; parameters, features, baseline=_self, normalisation=_self)
+    I = infer(S, var; parameters, features, baseline=identity, normalisation=identity)
 
     windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
 # ------------------------------------------ Time series ----------------------------------------- #
@@ -477,7 +477,7 @@ end
             ymax -= 0.1*(ymax-ymin)
             ymin += 0.1*(ymax-ymin)
             xs = length(p)*1.01
-            
+
             ρₚ = round(corspearman(I.parameters[Int.(windowCentres)], I.estimates); sigdigits=3)
             markercolor := cgrad([:crimson, :forestgreen], LinRange(0, 1, 256))[round(Int, abs(ρₚ)*255)+1]
             markerstrokewidth := 0.0
@@ -493,8 +493,3 @@ end
         end
     end
 end
-
-
-
-
-

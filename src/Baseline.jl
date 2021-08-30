@@ -30,7 +30,7 @@ export reZero
 # ------------------------------------------------------------------------------------------------ #
 #                            Combine a high and low dimensional baseline                           #
 # ------------------------------------------------------------------------------------------------ #
-function reScale(x::AbstractVector, f::Function=_self)
+function reScale(x::AbstractVector, f::Function=identity)
     σ = std(x)
     σ′ = f(x)
     if σ′ == σ == 0.0
@@ -294,10 +294,3 @@ function dependencyscalingnorotation(𝑏, Fₕ)
     return g
 end
 export dependencyscalingnorotation
-
-
-
-
-
-
-

@@ -6,17 +6,17 @@ using NonstationaryProcesses
 # features:     TS array -> feature array
 # projections:  feature array -> low dim projection array
 # estimates:    projection array --> parameter estimates
-_self(arg) = arg
-export _self
+identity(arg) = arg
+export identity
 
 Base.@kwdef struct Inference
     # These you can set
     timeseries
     windows = slidingWindow
     features = catch24
-    baseline = _self
-    filter = _self #nonanrows∘noconstantrows∘noinfrows
-    normalisation = _self#standardise
+    baseline = identity
+    filter = identity #nonanrows∘noconstantrows∘noinfrows
+    normalisation = identity#standardise
     dimensionalityReduction = principalcomponents
     parameters = timeseries .+ NaN
     # These you should leave to calculate
