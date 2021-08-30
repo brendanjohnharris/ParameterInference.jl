@@ -106,14 +106,15 @@ function constantrows(F::AbstractArray; tol=1e-10)
 end
 export constantrows
 
-function noconstantrows(F::AbstractArray; tol=1e-10)
+function _noconstantrows(F::AbstractArray; tol=1e-10)
     idxs = constantrows(F; tol=tol)
     if any(idxs)
         @warn "$(+(idxs...)) constant rows are being removed"
-        return F[collect(.!idxs)[:], :]
+        return F -> F[collect(.!idxs)[:], :]
     end
-    return F
+    return F -> F
 end
+noconstantrows(F::AbstractArray; tol=1e-10) = _noconstantrows(F; tol)
 export noconstantrows
 
 
@@ -127,24 +128,26 @@ function infrows(F::AbstractArray)
 end
 export nanrows
 
-function nonanrows(F::AbstractArray)
+function _nonanrows(F::AbstractArray)
     idxs = nanrows(F)
     if any(idxs)
-        @warn "$(+(idxs...)) NaN rows are being removed" # Maybe more detail?
-        return F[collect(.!idxs)[:], :]
+        @warn "$(+(idxs...)) NaN rows will be removed" # Maybe more detail?
+        return F -> F[collect(.!idxs)[:], :]
     end
-    return F
+    return F -> F
 end
+nonanrows(F::AbstractArray) = _nonanrows(F)(F)
 export nonanrows
 
-function noinfrows(F::AbstractArray)
+function _noinfrows(F::AbstractArray)
     idxs = infrows(F)
     if any(idxs)
-        @warn "$(+(idxs...)) Inf rows are being removed"
-        return F[collect(.!idxs)[:], :]
+        @warn "$(+(idxs...)) Inf rows will be removed"
+        return F -> F[collect(.!idxs)[:], :]
     end
-    return F
+    return F -> F
 end
+noinfrows(F::AbstractArray) = _noinfrows(F)(F)
 export noinfrows
 
 function nonans(F::AbstractVector)

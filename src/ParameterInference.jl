@@ -15,7 +15,7 @@ Base.@kwdef struct Inference
     windows = slidingWindow
     features = catch24
     baseline = _self
-    filter = nonanrows∘noconstantrows∘noinfrows
+    filter = _self #nonanrows∘noconstantrows∘noinfrows
     normalisation = _self#standardise
     dimensionalityReduction = principalcomponents
     parameters = timeseries .+ NaN
@@ -44,6 +44,7 @@ include("DistributionTests.jl")
 include("Information.jl")
 include("BaselineFilter.jl")
 include("BoxCox.jl")
+include("TestBaselines.jl")
 
 function infer(x::AbstractVector; kwargs...)
     Inference(timeseries=x; kwargs...)

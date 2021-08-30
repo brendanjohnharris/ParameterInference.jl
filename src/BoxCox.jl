@@ -7,7 +7,9 @@ using Tullio
 
 function YJT.transform(X::AbstractArray, λs::Vector)
     Y = deepcopy(X)
-    @tullio Y[j, :] = YJT.transform(X[j, :], λs[j])
+    for j in size(X, 1)
+        Y[j, :] = YJT.transform(X[j, :], λs[j])
+    end
     return Y
 end
 
