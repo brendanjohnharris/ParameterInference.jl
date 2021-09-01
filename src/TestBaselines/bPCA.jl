@@ -3,11 +3,11 @@ function bPCA(Fₕ, Fₗ=zeros(size(Fₕ)); dimred=principalcomponents, transfor
     filter=baselinefilter(Fₕ, Fₗ)
     Fₗ = Fₗ |> transform |> filter
     Fₕ = Fₕ |> transform |> filter
-    m = project(Fₕ, dimred, pratio=0.95)
+    m = project(Fₕ, dimred, pratio=0.99)
     rotation(F) = embed(m, F)
     Fₗ = Fₗ |> rotation
     Fₕ = Fₕ |> rotation
     scale = intervalscaled(Fₕ, Fₗ; transform=identity, filter=identity)
-    return F -> F |> filter |> rotation |> scale
+    return F -> F |> transform |> filter |> rotation |> scale
 end
 export bPCA
