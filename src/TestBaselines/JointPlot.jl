@@ -20,6 +20,7 @@
     for (m, s) ∈ y |> eachcol |> enumerate
         @series begin
             seriestype := :path
+            linealpha --> 0.5
             if colormode == :columns
                 (seriescolor := m)
             else
@@ -31,6 +32,7 @@
         end
         @series begin
             seriestype := :scatter
+            markeralpha --> 0.5
             if colormode == :columns
                 (seriescolor := m)
             else

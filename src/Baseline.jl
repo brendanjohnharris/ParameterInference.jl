@@ -55,6 +55,11 @@ function NonstationaryProcesses.rampInterval(Fₗ, Fₕ, F)
     𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
     𝐟 = [𝐟 -> rampInterval(0.0, 1.0, 𝛔ₗ[i], 𝛔ₕ[i])(std(𝐟)) for i ∈ 1:size(F, 1)]
 end
+function NonstationaryProcesses.rampOn(Fₗ, Fₕ, F)
+    𝛔ₗ, 𝛔ₕ = std(Array(Fₗ), dims=2), std(Array(Fₕ), dims=2)
+    𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
+    𝐟 = [𝐟 -> rampOn(0.0, 1.0, 𝛔ₗ[i], 𝛔ₕ[i])(std(𝐟)) for i ∈ 1:size(F, 1)]
+end
 
 function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::Array{Float64, 2},
                     interval::Function=rampInterval)
@@ -66,6 +71,13 @@ end
 function intervalscale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
     interval::Function=rampInterval)
     if any(Catch22.featureDims(Fₗ) .!= Catch22.featureDims(Fₕ))
+        error("High and low dimensional baselines do not have the same features")
+    end
+    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
+end
+function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::AbstractFeatureMatrix,
+    interval::Function=rampInterval)
+    if size(Fₗ, 1) .!= size(Fₕ, 1)
         error("High and low dimensional baselines do not have the same features")
     end
     return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))

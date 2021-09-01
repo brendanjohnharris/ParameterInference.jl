@@ -1,1 +1,8 @@
 include("TestBaselines/JointPlot.jl")
+include("TestBaselines/Raw.jl")
+include("TestBaselines/Standardised.jl")
+include("TestBaselines/Filter.jl")
+include("TestBaselines/Transform.jl")
+include("TestBaselines/IntervalScale.jl")
+include("TestBaselines/Heuristic.jl")
+include("TestBaselines/bPCA.jl")

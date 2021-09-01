@@ -2,3 +2,4 @@ function raw(Fₕ, Fₗ=zeros(size(Fₕ)); transform=baselinetransform(Fₕ, F�
                                              filter=baselinefilter(Fₕ, Fₗ))
     return F -> F |> transform |> filter
 end
+export raw

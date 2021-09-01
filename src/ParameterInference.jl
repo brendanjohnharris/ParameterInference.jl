@@ -6,8 +6,6 @@ using NonstationaryProcesses
 # features:     TS array -> feature array
 # projections:  feature array -> low dim projection array
 # estimates:    projection array --> parameter estimates
-identity(arg) = arg
-export identity
 
 Base.@kwdef struct Inference
     # These you can set

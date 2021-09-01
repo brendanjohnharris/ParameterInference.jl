@@ -2,7 +2,7 @@
 """
 A crude method for finding integer-valued rows of an array
 """
-function findintegerfeatures(X::AbstractArray, N=5, prec=3)
+function findintegerfeatures(X::AbstractArray, N=10, prec=3)
     mask = fill(false, size(X, 1))
     for (i, f) ∈ enumerate(eachrow(X))
         σ = std(f)
