@@ -155,10 +155,9 @@ function robustprincipalcomponents(F::AbstractArray, npcs=size(F, 1)::Int, scale
     fit!(m, ProxGradParams(;abs_tol, rel_tol, max_iter))
 	return m
 end
-
 MultivariateStats.projection(M::LowRankModels.GLRM) = inv(M.X)
-
-function embed(M::LowRankModels.GLRM, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
+function embed(M::LowRankModels.GLRM, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:M.k)
+    @assert M.k == size(F,  1) # For now, to invert X it must be square whcih means keeping all PCs
     P = projection(M)
     P = P[:, PCs]
     D = P'*F

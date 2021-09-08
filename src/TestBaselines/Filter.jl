@@ -1,5 +1,6 @@
-function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); fitlervariance=true)
+function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true)
     initialsize = size(Fₕ, 1);
+
     nanfilter = _nonanrows(Fₕ);
     Fₕ, Fₗ = nanfilter.((Fₕ, Fₗ))
 
@@ -13,7 +14,7 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); fitlervariance=true)
         # * Get features that have a low dim variance smaller than 1% the high dim variance
         σₕ, σₗ = std.((Fₕ, Fₗ), dims=2)
         prop = σₗ./σₕ
-        idxs = prop .< 0.01
+        idxs = vec(prop .< 0.05)
         return F -> F[idxs, :]
     end
     variancefilter = filtervariance ? lowdimfilter(Fₕ, Fₗ) : identity

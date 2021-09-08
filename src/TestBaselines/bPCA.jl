@@ -1,8 +1,18 @@
+function baselinerotate(dimred)
+    function rotate(Fₕ, Fₗ)
+        m = project(Array(Fₕ), dimred)
+        F -> embed(m, Array(F))
+    end
+end
+
+
+
 """"""
-function bPCA(Fₕ, Fₗ=zeros(size(Fₕ)); dimred=principalcomponents,
+function bPCA(Fₕ, Fₗ=zeros(size(Fₕ)); dimred=outlierprincipalcomponents,
                     transform=baselinetransform,
                     filter=baselinefilter,
-                    rotate = (Fₕ, Fₗ) -> F -> embed(project(Fₕ, dimred, pratio=0.99), F), scale=robustintervalscaled)
+                    rotate=baselinerotate(dimred),
+                    scale=robustintervalscale)
 
     transform = transform(Fₕ, Fₗ)
     Fₗ = Fₗ |> transform
