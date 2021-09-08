@@ -4,6 +4,7 @@ using Catch22
 using ManifoldLearning
 using LinearAlgebra
 using LowRankModels
+using SparseArrays
 
 
 # Function wrapping projectors
@@ -143,8 +144,6 @@ export residualVariance
 
 
 
-
-
 function robustprincipalcomponents(F::AbstractArray, npcs=size(F, 1)::Int, scale::Float64=1.0; abs_tol=1e-4^3, rel_tol=1e-4^3, max_iter=10000, kwargs...)
 	loss = HuberLoss()
 	r = ZeroReg()
@@ -156,7 +155,9 @@ function robustprincipalcomponents(F::AbstractArray, npcs=size(F, 1)::Int, scale
     fit!(m, ProxGradParams(;abs_tol, rel_tol, max_iter))
 	return m
 end
+
 MultivariateStats.projection(M::LowRankModels.GLRM) = inv(M.X)
+
 function embed(M::LowRankModels.GLRM, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
     P = projection(M)
     P = P[:, PCs]
@@ -168,4 +169,36 @@ function embed(M::LowRankModels.GLRM, F::AbstractArray, PCs::Union{Int, Vector{I
 end
 export robustprincipalcomponents
 
-# ! Then do missing principal components...
+
+
+function nanprincipalcomponents(F::AbstractArray, args...; kwargs...)
+    # Convert F to a sparse array, sending NaNs to sparse elements
+    init = deepcopy(F) |> Array # Chunky?
+    for i ∈ 1:size(init, 1)
+        init[i, isnan.(init[i, :])] .= median(init[i, :][.!isnan.(init[i, :])])
+    end
+    A = SparseMatrixCSC(F)
+    SparseArrays.fkeep!(A, (i,j,x) -> !isnan(x))
+    m = _nanprincipalcomponents(A, init, args...; kwargs...)
+end
+
+function _nanprincipalcomponents(A::AbstractArray, init, npcs=size(A, 1)::Int, scale::Float64=1.0; abs_tol=1e-4^3, rel_tol=1e-4^3, max_iter=20000, kwargs...)
+    m = GLRM(A, QuadLoss(), ZeroReg(), ZeroReg(), npcs; kwargs...)
+    U, D, V = svd(init)
+    D = D |> Diagonal
+    m.X, m.Y = U*sqrt(D), sqrt(D)*V';
+    fit!(m, ProxGradParams(;abs_tol, rel_tol, max_iter))
+    return m
+end
+export nanprincipalcomponents
+
+function outlierprincipalcomponents(F::AbstractArray, args...; kwargs...)
+    # * The goal is the remove any outliers (say, greater than 10 iqrs from the median) and then do PCA
+    A = deepcopy(F)
+    centres = median(F, dims=2)
+    scales = mapslices(iqr, F, dims=2)
+    for i ∈ 1:size(A, 1)
+        A[i, abs.(A[i, :] .- centres[i]) .> 5*scales[i]] .= NaN
+    end
+    return nanprincipalcomponents(A, args...; kwargs...)
+end
