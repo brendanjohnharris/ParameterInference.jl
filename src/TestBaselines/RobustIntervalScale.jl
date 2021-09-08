@@ -1,13 +1,12 @@
 """"""
-function robustintervalscaled(Fₕ, Fₗ=zeros(size(Fₕ)); transform=baselinetransform,
-    filter=baselinefilter)
-    transform = transform(Fₕ, Fₗ)
-    Fₗ = Fₗ |> transform
-    Fₕ = Fₕ |> transform
-    filter = filter(Fₕ, Fₗ)
-    Fₗ = Fₗ |> filter
-    Fₕ = Fₕ |> filter
-    scale = intervalscale(Fₗ, Fₕ, rampOn) # So, extrapolate if variance is greater than high dim.
-    return F -> F |> transform |> filter |> scale
+function robustintervalscale(Fₕ, Fₗ=zeros(size(Fₕ)))
+    σₗ = mapslices(iqr, Fₗ, dims=2)
+    σₕ = mapslices(iqr, Fₕ, dims=2)
+    function scale(F)
+        σ = mapslices(iqr, F, dims=2)
+        σᵢ = rampOn(0, 1, σₗ, σₕ).(σ) # No need to worry about means?
+        return F.*σᵢ./σ
+    end
+    return F -> F |> scale
 end
 export robustintervalscaled
