@@ -44,6 +44,8 @@ include("BaselineFilter.jl")
 include("BoxCox.jl")
 include("TestBaselines.jl")
 
+Base.identity(x, y) = identity
+
 function infer(x::AbstractVector; kwargs...)
     Inference(timeseries=x; kwargs...)
 end

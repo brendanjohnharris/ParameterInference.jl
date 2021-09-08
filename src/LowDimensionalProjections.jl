@@ -3,6 +3,7 @@ using Distances
 using Catch22
 using ManifoldLearning
 using LinearAlgebra
+using LowRankModels
 
 
 # Function wrapping projectors
@@ -131,3 +132,40 @@ function residualVariance(dF::Array, dD::Array{Float64, 2})
     # Sqrt of 1 minus the correlation between distances in feature space and the low dimensional space, squared
 end
 export residualVariance
+
+
+
+
+
+
+
+
+
+
+
+
+
+function robustprincipalcomponents(F::AbstractArray, npcs=size(F, 1)::Int, scale::Float64=1.0; abs_tol=1e-4^3, rel_tol=1e-4^3, max_iter=10000, kwargs...)
+	loss = HuberLoss()
+	r = ZeroReg()
+    # Start with PCA
+    m = GLRM(F, QuadLoss(), ZeroReg(), ZeroReg(), npcs; kwargs...)
+    fit!(m)
+    # Then do the other thing
+    m = GLRM(A, loss, r, r, k; kwargs...)
+    fit!(m, ProxGradParams(;abs_tol, rel_tol, max_iter))
+	return m
+end
+MultivariateStats.projection(M::LowRankModels.GLRM) = inv(M.X)
+function embed(M::LowRankModels.GLRM, F::AbstractArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars))
+    P = projection(M)
+    P = P[:, PCs]
+    D = P'*F
+    if size(D, 1) == 1
+        D = D[:]
+    end
+    return D
+end
+export robustprincipalcomponents
+
+# ! Then do missing principal components...

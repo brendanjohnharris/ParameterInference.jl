@@ -30,7 +30,7 @@ function normalise(X::AbstractFeatureArray, 𝛍::AbstractFeatureArray, 𝛔::Ab
     X, 𝛍 = intersectFeatures(X, 𝛍)
     X, 𝛔 = intersectFeatures(X, 𝛔)
     X, 𝛍 = intersectFeatures(X, 𝛍) # In case sigma is different from mu in features
-    normalise(X, vec(𝛍), vec(𝛔), f, dim)
+    FeatureArray(normalise(X, vec(𝛍), vec(𝛔), f, dim), getnames(X))
 end
 export normalise
 
