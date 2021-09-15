@@ -16,10 +16,12 @@ using StatsPlots
         F, F2 = F
         F[isinf.(F)] .= 0
         F2[isinf.(F2)] .= 0
-        if size(F, 1) > size(F2, 1)
-            (F2, F) = intersectFeatures(F2, F)
-        else
-            (F, F2) = intersectFeatures(F, F2)
+        if F isa AbstractFeatureArray && F2 isa AbstractFeatureArray
+            if size(F, 1) > size(F2, 1)
+                (F2, F) = intersectFeatures(F2, F)
+            else
+                (F, F2) = intersectFeatures(F, F2)
+            end
         end
     end
     if normtype == :zscore
@@ -52,7 +54,11 @@ using StatsPlots
         end
     end
 
-    fnames = replace.(String.(Catch22.featureDims(F)),  '_'=>"\\_")
+    if F isa AbstractFeatureArray && F2 isa AbstractFeatureArray
+        fnames = replace.(String.(Catch22.featureDims(F)),  '_'=>"\\_")
+    else
+        fnames = 1:size(F, 1)
+    end
 
     if backend() !== Plots.PyPlotBackend()
         rotation --> 90

@@ -1,4 +1,4 @@
-function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true)
+function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true, thresh=0.05)
     initialsize = size(Fₕ, 1);
 
     nanfilter = _nonanrows(Fₕ);
@@ -14,8 +14,9 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true)
         # * Get features that have a low dim variance smaller than 1% the high dim variance
         σₕ, σₗ = std.((Fₕ, Fₗ), dims=2)
         prop = σₗ./σₕ
-        idxs = vec(prop .< 0.05)
-        return F -> F[idxs, :]
+        idxs = vec(prop .< thresh)
+        return F -> ((@info "Filtered by variances down to $(sum(idxs))/$(length(idxs)) features"),
+                    F[idxs, :])[2]
     end
     variancefilter = filtervariance ? lowdimfilter(Fₕ, Fₗ) : identity
 
@@ -23,3 +24,7 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true)
     return F -> F |> nanfilter |> inffilter |> integerfilter |> variancefilter # The order of these matters
 end
 export baselinefilter
+
+function baselinefilter(; kwargs...)
+    return (x, y) -> baselinefilter(x, y; kwargs...)
+end
