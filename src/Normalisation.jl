@@ -114,7 +114,7 @@ function _noconstantrows(F::AbstractArray; tol=1e-10)
     end
     return F -> F
 end
-noconstantrows(F::AbstractArray; tol=1e-10) = _noconstantrows(F; tol)
+noconstantrows(F::AbstractArray; tol=1e-10) = _noconstantrows(F; tol)(F)
 export noconstantrows
 
 

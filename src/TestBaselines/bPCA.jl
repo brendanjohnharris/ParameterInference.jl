@@ -8,7 +8,7 @@ export baselinerotate
 
 
 """"""
-function bPCA(Fₕ, Fₗ=zeros(size(Fₕ)); dimred=principalcomponents,
+function bPCA(Fₕ, Fₗ=zeros(size(Fₕ));
                     transform=identity,
                     prescale=identity,
                     prefilter=identity,

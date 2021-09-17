@@ -13,8 +13,6 @@ function rprincipalcomponents(A::AbstractArray, k::Int, scale::Float64=1.0; abs_
 	return m
 end
 
-
-
 function nanprincipalcomponents(A::AbstractArray, k::Int, scale::Float64=1.0; abs_tol=1e-4^3, rel_tol=1e-4^3, max_iter=10000, kwargs...)
     A = SparseArrays.fkeep!(A, (i,j,x) -> abs(x) < 5) # ! better
 	loss = QuadLoss()

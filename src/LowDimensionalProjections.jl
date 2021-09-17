@@ -185,7 +185,7 @@ function _nanprincipalcomponents(A::AbstractArray, init, npcs=size(A, 1)::Int, s
     m = GLRM(A, QuadLoss(), ZeroReg(), ZeroReg(), npcs; kwargs...)
     U, D, V = svd(init)
     D = D |> Diagonal
-    m.X, m.Y = U*sqrt(D), sqrt(D)*V';
+    m.X, m.Y = collect((U*sqrt(D))'), sqrt(D)*V';
     fit!(m, ProxGradParams(;abs_tol, rel_tol, max_iter))
     return m
 end
@@ -201,3 +201,4 @@ function outlierprincipalcomponents(F::AbstractArray, args...; kwargs...)
     end
     return nanprincipalcomponents(A, args...; kwargs...)
 end
+export outlierprincipalcomponents

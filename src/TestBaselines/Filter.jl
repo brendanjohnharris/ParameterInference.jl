@@ -11,7 +11,7 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true, thres
     Fₕ, Fₗ = integerfilter.((Fₕ, Fₗ))
 
     function lowdimfilter(Fₕ, Fₗ)
-        # * Get features that have a low dim variance smaller than 1% the high dim variance
+        # * Get features that have a low dim variance smaller than thresh% the high dim variance
         σₕ, σₗ = std.((Fₕ, Fₗ), dims=2)
         prop = σₗ./σₕ
         idxs = vec(prop .< thresh)
