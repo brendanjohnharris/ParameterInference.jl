@@ -10,7 +10,7 @@ using NonstationaryProcesses
 Base.@kwdef struct Inference
     # These you can set
     timeseries
-    windows = slidingWindow
+    windows = slidingwindow
     features = catch24
     baseline = identity
     filter = identity #nonanrows∘noconstantrows∘noinfrows
@@ -19,15 +19,16 @@ Base.@kwdef struct Inference
     parameters = timeseries .+ NaN
     # These you should leave to calculate
     windowedTimeseries = (windows)(timeseries)
-    windowEdges = windowedTimeseries[2]
-    windowCentres = (windowEdges[1:end-1] + windowEdges[2:end])./2
-    F = (!(features isa AbstractFeatureSet) && !(features isa Vector{Function}) ? features : features(windowedTimeseries[1])) # Maybe you supplied some pre-computed features?
+    windowTimes = (windows)(1:length(timeseries))
+    windowEdges = [windowTimes[1, :][:]..., windowTimes[end]]
+    windowCentres = mean(windowTimes, dims=1)[:]
+    F = (!(features isa AbstractFeatureSet) && !(features isa Vector{Function}) ? features : features(windowedTimeseries)) # Maybe you supplied some pre-computed features?
     F̂ = (filter∘baseline∘filter∘normalisation∘filter)(F) #! Too many filters?
     model = project(Array(F̂), dimensionalityReduction)
     F′ = embed(model, Array(F̂))
     estimates = embed(model, Array(F̂), [1])
     corrtype = corspearman
-    ρ = corrtype(parameters[Int.(round.(windowCentres))], estimates)
+    ρ = corrtype(mean((windows)(parameters), dims=1)[:], estimates)
 end
 export Inference
 

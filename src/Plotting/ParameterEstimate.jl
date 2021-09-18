@@ -19,9 +19,10 @@ using HypothesisTests
     left_margin --> 10Plots.mm
     right_margin --> 25Plots.mm
 
-    windowCentres = round.((I.windowEdges[1:end-1] + I.windowEdges[2:end])./2)
+    windowCentres = round.(I.windowCentres)
 # ------------------------------------------ Time series ----------------------------------------- #
     t = NonstationaryProcesses.timeDims(I.timeseries)
+    # ! Doesnt work with overlapping windows
     if tswindows
         @series begin
             seriestype := :tswindows
@@ -29,7 +30,7 @@ using HypothesisTests
             yguide --> "Time Series"
             xguide := ""
             framestyle := :box
-            N --> Int(round(mean((collect(I.windowEdges[2:end]) .- collect(I.windowEdges[1:end-1])))))
+            N --> size(I.windowedTimeseries, 1) #Int(round(mean((collect(I.windowEdges[2:end]) .- collect(I.windowEdges[1:end-1])))))
             yaxis --> nothing
             xaxis --> nothing
             top_margin --> 3Plots.mm
@@ -166,9 +167,12 @@ using HypothesisTests
         framestyle := :box
         #xlims := extrema(dims(I.timeseries, Ti).val)
         ylims := (0.5, length(idxs)+0.5)
-        x = NonstationaryProcesses.timeDims(I.timeseries)[I.windowEdges]
+        if length(I.windowedTimeseries) <= length(I.timeseries) # i.e. no overlap
+            x = NonstationaryProcesses.timeDims(I.timeseries)[I.windowEdges]
+        else
+            x = [NaN]
+        end
     end
-
 end
 
 
