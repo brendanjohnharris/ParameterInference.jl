@@ -169,12 +169,15 @@ end
 export robustprincipalcomponents
 
 
+nanmedian = x -> all(isnan.(x)) ? NaN : median(x[.!isnan.(x)])
+naniqr = x -> all(isnan.(x)) ? NaN : iqr(x[.!isnan.(x)])
 
 function nanprincipalcomponents(F::AbstractArray, args...; kwargs...)
     # Convert F to a sparse array, sending NaNs to sparse elements
     init = deepcopy(F) |> Array # Chunky?
     for i ∈ 1:size(init, 1)
-        init[i, isnan.(init[i, :])] .= median(init[i, :][.!isnan.(init[i, :])])
+        repnans = all(isnan.(init[i, :])) ? randn(sum(isnan.(init[i, :]))).*eps() : nanmedian(init[i, :][.!isnan.(init[i, :])]) # If all nans, just use some tiny noise.
+        init[i, isnan.(init[i, :])] .= repnans
     end
     A = SparseMatrixCSC(F)
     SparseArrays.fkeep!(A, (i,j,x) -> !isnan(x))
@@ -194,10 +197,10 @@ export nanprincipalcomponents
 function outlierprincipalcomponents(F::AbstractArray, args...; kwargs...)
     # * The goal is the remove any outliers (say, greater than 10 iqrs from the median) and then do PCA
     A = deepcopy(F)
-    centres = median(F, dims=2)
-    scales = mapslices(iqr, F, dims=2)
+    centres = mapslices(nanmedian, F, dims=2)
+    scales = mapslices(naniqr, F, dims=2)
     for i ∈ 1:size(A, 1)
-        A[i, abs.(A[i, :] .- centres[i]) .> 5*scales[i]] .= NaN
+        A[i, abs.(A[i, :] .- centres[i]) .>= 5*scales[i]] .= NaN
     end
     return nanprincipalcomponents(A, args...; kwargs...)
 end

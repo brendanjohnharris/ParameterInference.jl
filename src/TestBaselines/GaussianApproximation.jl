@@ -321,9 +321,6 @@ And $D(A)$ is the diagonal of $A$. The resulting approximation is simply a linea
 There are other approximations that also allow covariances to vanish in the same limit...
 """
 
-# ╔═╡ 3fb27040-56ae-4b5a-a570-da79abfbef84
-md"## !! Do interval scaling!!"
-
 # ╔═╡ f771887a-77f0-4a4d-9e4c-7e988201197f
 𝛴²ₕ₃ = cov(𝑓ₕ₃');
 
@@ -349,7 +346,7 @@ md"## !! Do interval scaling!!"
 𝛴²₃ - 𝛴²₀;
 
 # ╔═╡ 3eda9fc1-0d54-4cde-94ba-5e611a4773b6
-𝛬ₕ₃[2, 2] = eps()
+𝛬ₕ₃[2, 2] = eps();
 
 # ╔═╡ 0ae23619-0ce3-4e32-9a11-f9a444235c70
 𝑓′′₃ = (𝑃ₕ₃*inv(𝛬ₕ₃)*𝑉)'*𝑓₃; 
@@ -364,7 +361,7 @@ md"## !! Do interval scaling!!"
 scatter(𝑓′′₃[4, :], .-𝑓′′₃[5, :], aspect_ratio=:equal, ylabel="𝛼′", xlabel="𝛽′", title="Standardised PCA estimate", left_margin=5Plots.mm); 
 
 # ╔═╡ 9d6334c1-7107-4fbb-b383-9a37fc56de74
-scatter!(.-𝛽, .-0.1.*𝛼, markersize=1, markercolor=:gray) 
+scatter!(.-𝛽, .-0.1.*𝛼, markersize=1, markercolor=:gray)
 
 # ╔═╡ 07e9a417-5adb-4182-a98d-fd618feaf675
 scatter(𝛽, 𝑓′′₃[4, :]); # Compairwise to true parameters
@@ -459,7 +456,6 @@ scatter(𝑓̂′₃[4, :], 𝑓′′₃[4, :]); # Compare to standardised PCA 
 # ╠═fa43e761-0b22-4903-aa6c-47050d8c27c0
 # ╟─bcd85e11-8bf0-4968-a528-8b56ce14db5b
 # ╟─3fe79e11-947e-46e6-a5ef-1bf1b537c857
-# ╠═3fb27040-56ae-4b5a-a570-da79abfbef84
 # ╠═f771887a-77f0-4a4d-9e4c-7e988201197f
 # ╠═b636df98-f935-46b4-bb08-be96cee18884
 # ╠═c43d6053-4eeb-450a-bca4-bd5d58b179c1

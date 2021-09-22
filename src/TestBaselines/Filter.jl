@@ -15,12 +15,12 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true, thres
         σₕ, σₗ = std.((Fₕ, Fₗ), dims=2)
         prop = σₗ./σₕ
         idxs = vec(prop .< thresh)
-        return F -> ((@info "Filtered by variances down to $(sum(idxs))/$(length(idxs)) features"),
+        return F -> ((@warn "Filtered by variances down to $(sum(idxs))/$(length(idxs)) features"),
                     F[idxs, :])[2]
     end
     variancefilter = filtervariance ? lowdimfilter(Fₕ, Fₗ) : identity
 
-    @info "Filtered down to $(size(Fₕ, 1))/$initialsize features"
+    @warn "Filtered down to $(size(Fₕ, 1))/$initialsize features"
     return F -> F |> nanfilter |> inffilter |> integerfilter |> variancefilter # The order of these matters
 end
 export baselinefilter

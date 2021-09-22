@@ -1,7 +1,15 @@
 function baselinerotate(dimred)
     function rotate(Fₕ, Fₗ)
         m = project(Array(Fₕ), dimred)
-        F -> embed(m, Array(F))
+        function antinan(F)
+            # G = deepcopy(F)
+            # G[mapslices(all, isnan.(F), dims=2)[:], :] .= 0.0
+            if any(mapslices(all, isnan.(F), dims=2)[:])
+                @error "The test data has some all-NaN features"
+            end
+            return F
+        end
+        F -> embed(m, Array(antinan(F)))
     end
 end
 export baselinerotate
