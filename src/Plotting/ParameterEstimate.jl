@@ -90,8 +90,12 @@ using HypothesisTests
         seriescolor := featurecolor
         clim = max(abs.(extrema(clusterF))...)
         clims := (-clim, clim)
-        println("The clustered features are:\n")
-        display.(Catch22.featureDims(clusterF))
+        try
+            println("The clustered features are:\n")
+            display.(Catch22.featureDims(clusterF))
+        catch
+            @warn "Could not display clustered features, probably because the feature matrix is not a FeatureMatrix"
+        end
         #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
         (x, y, X) = (NonstationaryProcesses.timeDims(I.timeseries)[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)
     end
@@ -155,8 +159,9 @@ using HypothesisTests
         ymax -= 0.05*(ymax-ymin)
         ymin += 0.05*(ymax-ymin)
         if cluster == false
-            ρmin = round(min(ρ...), sigdigits=3)
-            ρmax = round(max(ρ...), sigdigits=3)
+            notnani = ρ[.!isnan.(ρ)]
+            ρmin = round(min(notnani...), sigdigits=3)
+            ρmax = round(max(notnani...), sigdigits=3)
             annotations:= [(max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01, ymax, text("ρ = $ρmin", textcolor, :left, 8)),
                         (max(NonstationaryProcesses.timeDims(I.timeseries)...)*1.01,  ymin, text("ρ = $ρmax", textcolor, :left, 8))]
         end

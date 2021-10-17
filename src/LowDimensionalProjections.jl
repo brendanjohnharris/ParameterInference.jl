@@ -205,3 +205,16 @@ function outlierprincipalcomponents(F::AbstractArray, args...; kwargs...)
     return nanprincipalcomponents(A, args...; kwargs...)
 end
 export outlierprincipalcomponents
+
+
+"""
+Only keep the PC's explaining more than `thresh` proportion of variance.
+"""
+function significantprincipalcomponents(F::AbstractArray; thresh=1/size(F, 1), kwargs...)
+    M = principalcomponents(F; kwargs...)
+    v = principalvars(M)./sum(principalvars(M))
+    npcs = sum(v .> thresh)
+    M = principalcomponents(F; maxoutdim=npcs, kwargs...)
+end
+significantprincipalcomponents(F::AbstractFeatureArray, args...; kwargs...) = significantprincipalcomponents(Array(F), args...; kwargs...)
+export significantprincipalcomponents

@@ -64,6 +64,8 @@ S = arSim(parameter_profiles = (sineWave, sineWave),
             markercolor --> colors[1]
             x := p[1, nx]
             y := p[2, nx]
+            xlims := [minimum(p[1, :])-0.2, maximum(p[1, :])+0.2]
+            ylims := [minimum(p[2, :])-0.2, maximum(p[2, :])+0.2]
             ()
         end
         Nn = size(F, 2)÷narrows
@@ -99,9 +101,45 @@ S = arSim(parameter_profiles = (sineWave, sineWave),
         markerstrokewidth --> 0.01
         x := F[1, :]
         y := F[2, :]
+        xlims := [minimum(F[1, :])-0.2, maximum(F[1, :])+0.2]
+        ylims := [minimum( F[2, :])-0.2, maximum( F[2, :])+0.2]
         ()
     end
 end
 
+featurespaceimage(S, AC[1:2], colors=[:black, :black]);
+savefig("../Figures/$(rand(UInt16)).svg");
+l = length(timeseries(S, 1))
+n = round(Int, 2*8/3)
+plot(vec(timeseries(S, 1))[n*l÷8+1:n*l÷8+251], color=:black);
+savefig("../Figures/$(rand(UInt16)).svg");
 
-featurespaceimage(S, AC[1:2], colors=[:black, :black])
+
+
+
+SS = arSim(parameter_profiles = (constant,),
+          parameters = (0.97),
+          tmax = 250,
+          transient_t0 = 0,
+          t0 = 0,
+          X0 = [0.0])
+plot(SS)
+savefig("../Figures/$(rand(UInt16)).svg");
+
+
+SS = arSim(parameter_profiles = (constant,),
+          parameters = (0.03),
+          tmax = 250,
+          transient_t0 = 0,
+          t0 = 0,
+          X0 = [0.0])
+plot(SS)
+savefig("../Figures/$(rand(UInt16)).svg");
+
+SSS = updateparam(ikedaSim(), 4, 0.6)
+plot(timeseries(SSS, 1)[1:150])
+savefig("../Figures/$(rand(UInt16)).svg");
+
+SSS = updateparam(ikedaSim(), 1, 25)
+plot(timeseries(SSS, 1)[1:150])
+savefig("../Figures/$(rand(UInt16)).svg");

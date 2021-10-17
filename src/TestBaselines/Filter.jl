@@ -13,7 +13,7 @@ function baselinefilter(Fₕ, Fₗ=zeros(size(Fₕ)); filtervariance=true, thres
     function lowdimfilter(Fₕ, Fₗ)
         # * Get features that have a low dim variance smaller than thresh% the high dim variance
         σₕ, σₗ = std.((Fₕ, Fₗ), dims=2)
-        prop = σₗ./σₕ
+        prop = Array(σₗ)./Array(σₕ)
         idxs = vec(prop .< thresh)
         return F -> ((@warn "Filtered by variances down to $(sum(idxs))/$(length(idxs)) features"),
                     F[idxs, :])[2]

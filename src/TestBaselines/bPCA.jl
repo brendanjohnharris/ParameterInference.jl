@@ -5,7 +5,8 @@ function baselinerotate(dimred)
             # G = deepcopy(F)
             # G[mapslices(all, isnan.(F), dims=2)[:], :] .= 0.0
             if any(mapslices(all, isnan.(F), dims=2)[:])
-                @error "The test data has some all-NaN features"
+                @warn "The test data has some all-NaN features. Replacing with epsilon noise."
+                F[mapslices(all, isnan.(F), dims=2)[:], :] .= eps().*randn(sum(mapslices(all, isnan.(F), dims=2)), size(F, 2))
             end
             return F
         end
