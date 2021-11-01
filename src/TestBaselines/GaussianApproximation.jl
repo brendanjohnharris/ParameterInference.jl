@@ -271,7 +271,7 @@ plotcov(𝑓₀)
 md"### Test data"
 
 # ╔═╡ 33167762-e2c6-4aba-98b7-58e28ee35ccb
-𝑓₃ = hcat(repeat([0.1.*𝛼 .+ 𝜂₃.*randn(nₛ)], 3)..., 𝛽.+𝜂₃.*randn(nₛ), 𝜂₃.*randn(nₛ))'; 
+𝑓₃ = hcat(repeat([0.25.*𝛼 .+ 𝜂₃.*randn(nₛ)], 3)..., 𝛽.+𝜂₃.*randn(nₛ), 𝜂₃.*randn(nₛ))'; 
 
 # ╔═╡ 35dcd411-a342-4ee2-9146-f45ad39d6341
 plotcov(𝑓₃) 
@@ -280,7 +280,7 @@ plotcov(𝑓₃)
 md"### True parameters"
 
 # ╔═╡ e64a04de-9257-4bbb-84c4-007c532d9c72
-scatter(𝛽, 0.1.*𝛼, aspect_ratio=:equal, ylabel="𝛼", xlabel="𝛽", title="True parameter variation",  markersize=2, markercolor=:gray)
+scatter(𝛽, 0.25.*𝛼, aspect_ratio=:equal, ylabel="𝛼", xlabel="𝛽", title="True parameter variation",  markersize=2, markercolor=:gray)
 
 # ╔═╡ 710d51ea-8196-4a7f-91fe-1a9bd3f06d01
 md"""
@@ -303,10 +303,10 @@ md"""
 scatter(𝑓̂′₃[4, :], 𝑓̂′₃[5, :], aspect_ratio=:equal, ylabel="𝛼′", xlabel="𝛽′", title="Standardised PCA estimate");
 
 # ╔═╡ 5e2281e9-360b-41dd-9f4f-38e14d8aea86
-scatter!(𝛽, 0.1.*𝛼, markersize=2, markercolor=:gray)
+scatter!(𝛽, 0.25.*𝛼, markersize=2, markercolor=:gray)
 
 # ╔═╡ fa43e761-0b22-4903-aa6c-47050d8c27c0
-scatter(𝛽, 𝑓̂′₃[4, :]);
+scatter(𝛼, 𝑓̂′₃[5, :])
 
 # ╔═╡ bcd85e11-8bf0-4968-a528-8b56ce14db5b
 md"""### Baseline PCA"""
@@ -330,38 +330,58 @@ And $D(A)$ is the diagonal of $A$. The resulting approximation is simply a linea
 There are other approximations that also allow covariances to vanish in the same limit...
 """
 
+# ╔═╡ 15970d81-af01-443e-b54a-bda505b1b3be
+md"""
+For now, we will just look at a heuristic approximation:
+
+$$V = I - D(\Sigma') D(\Sigma_0')$$
+
+which gives a total transformation of:
+
+$$F^\prime = FP\frac{I - D(\Sigma^\prime)^{-1}D(\Sigma^\prime_0)}{\Lambda_h - D(\Sigma^\prime_0)}$$
+
+where $P$ is the projection matrix of the high-dimensional baseline and the primes indicate application of $P$.
+
+"""
+
 # ╔═╡ f771887a-77f0-4a4d-9e4c-7e988201197f
 𝛴²ₕ₃ = cov(𝑓ₕ₃');
 
 # ╔═╡ b636df98-f935-46b4-bb08-be96cee18884
-𝛴²₀ = cov(𝑓₀')
+𝛴²₀ = cov(𝑓₀');
 
 # ╔═╡ c43d6053-4eeb-450a-bca4-bd5d58b179c1
-𝛴²₃ = cov(𝑓₃')
+𝛴²₃ = cov(𝑓₃');
+
+# ╔═╡ beafaf38-3753-4e9f-bf6d-69b98439fe18
+m3 = fit(MultivariateStats.PCA, 𝑓ₕ₃)
 
 # ╔═╡ fd00b9e4-f2fc-4571-8596-b1e53f8d7286
-𝑃ₕ₃ = eigvecs(𝛴²ₕ₃);
+𝑃ₕ₃ = m3.proj;#eigvecs(𝛴²ₕ₃);
 
 # ╔═╡ 9d13988d-e625-42b5-8e89-86d519027912
-𝛬ₕ₃ = Diagonal(sqrt.(abs.(eigvals(𝛴²ₕ₃))))
+𝛬ₕ₃ = sqrt(diagm(m3.prinvars)); #Diagonal(sqrt.(abs.(eigvals(𝛴²ₕ₃))))
+
+# ╔═╡ 4f5c167d-dbde-4fed-bd2d-63b0100e2d1a
+𝛴²ₕ′ = diagm(m3.prinvars)
+
+# ╔═╡ 82841686-b078-4ba2-b5ce-d748070437d2
+𝛴²₀′ = cov(𝑃ₕ₃'*𝑓₀, dims=2)
+
+# ╔═╡ 8dded5c7-f4ea-4ee5-b0b9-59b21c7f3097
+𝛴²′ = cov(𝑃ₕ₃'*𝑓₃, dims=2)
 
 # ╔═╡ cb77a71b-7cba-489d-a51b-690cdd281a4c
-𝑉 = sqrt(I - Diagonal(𝛴²₀)*inv(Matrix(Diagonal(𝛴²₃))));
+𝑉 = I - inv(sqrt(Diagonal(𝛴²′)))*sqrt(Diagonal(𝛴²₀′));
 
-# ╔═╡ e26f0ae5-4b0b-4886-a0ad-e109dbf9e321
-𝑉'*𝛴²₃*𝑉;
-
-# ╔═╡ dc9c5d21-87fc-404b-b8b7-1a704d890591
-𝛴²₃ - 𝛴²₀;
-
-# ╔═╡ 3eda9fc1-0d54-4cde-94ba-5e611a4773b6
-𝛬ₕ₃[2, 2] = eps();
+# ╔═╡ b00f965a-18a1-4ccf-85a9-ae79d588cab6
+𝑆 = 𝑉/(𝛬ₕ₃ - sqrt(Diagonal(𝛴²₀′)))
 
 # ╔═╡ 0ae23619-0ce3-4e32-9a11-f9a444235c70
-𝑓′′₃ = (𝑃ₕ₃*inv(𝛬ₕ₃)*𝑉)'*𝑓₃
+𝑓′′₃ = 𝑆'*𝑃ₕ₃'*𝑓₃;
 
-# ╔═╡ f64c9529-1f71-4daa-8f4e-6af000288b38
-𝛬ₕ₃
+# ╔═╡ ddb9528f-b57c-4333-9347-8a56aa6890c4
+#f′′₃ = (𝑓′′₃./std(𝑓′′₃, dims=2))*((sqrt(Diagonal(𝛴²′)) - sqrt(Diagonal(𝛴²₀′)))/())
 
 # ╔═╡ c3067e6d-dfaf-4938-8bbf-4b51514fd286
 𝑓′′₀ = (𝑃ₕ₃*inv(𝛬ₕ₃)*𝑉)'*𝛴²₀*(𝑃ₕ₃*inv(𝛬ₕ₃)*𝑉); # Not 0 because the transform is a strong approximation
@@ -373,13 +393,16 @@ cov(𝑓′′₃, dims=2)
 𝑓′′₀
 
 # ╔═╡ dbdcd6c4-102d-41cc-b218-100f74355b85
-scatter(𝑓′′₃[4, :], .-𝑓′′₃[5, :], aspect_ratio=:equal, ylabel="𝛼′", xlabel="𝛽′", title="Baseline PCA estimate", left_margin=5Plots.mm); 
+scatter(𝑓′′₃[2, :], .-𝑓′′₃[1, :], aspect_ratio=:equal, ylabel="𝛼′", xlabel="𝛽′", title="Baseline PCA estimate", left_margin=5Plots.mm); 
 
 # ╔═╡ 9d6334c1-7107-4fbb-b383-9a37fc56de74
-scatter!(.-𝛽, .-0.1.*𝛼, markersize=1, markercolor=:gray)
+scatter!(.-𝛽, .-0.25.*𝛼, markersize=1, markercolor=:gray)
 
 # ╔═╡ 07e9a417-5adb-4182-a98d-fd618feaf675
-scatter(𝛽, 𝑓′′₃[4, :]); # Compairwise to true parameters
+scatter(𝛽, 𝑓′′₃[2, :]) # Compairwise to true parameters
+
+# ╔═╡ 008512c1-3a44-42b4-8695-2a9f4d88ef01
+scatter(𝛼, 𝑓′′₃[1, :]) # Compairwise to true parameters
 
 # ╔═╡ 2826e49a-5566-4aa7-be9a-73799dfbebc7
 scatter(𝑓̂′₃[4, :], 𝑓′′₃[4, :]); # Compare to standardised PCA estimate. Similar, which is good, but properly scaled relative to other PCs (as above).
@@ -567,23 +590,27 @@ scatter!(.-𝛽, .-0.1.*𝛼, markersize=1, markercolor=:gray)
 # ╠═fa43e761-0b22-4903-aa6c-47050d8c27c0
 # ╟─bcd85e11-8bf0-4968-a528-8b56ce14db5b
 # ╟─3fe79e11-947e-46e6-a5ef-1bf1b537c857
+# ╠═15970d81-af01-443e-b54a-bda505b1b3be
 # ╠═f771887a-77f0-4a4d-9e4c-7e988201197f
 # ╠═b636df98-f935-46b4-bb08-be96cee18884
 # ╠═c43d6053-4eeb-450a-bca4-bd5d58b179c1
+# ╠═beafaf38-3753-4e9f-bf6d-69b98439fe18
 # ╠═fd00b9e4-f2fc-4571-8596-b1e53f8d7286
 # ╠═9d13988d-e625-42b5-8e89-86d519027912
+# ╠═4f5c167d-dbde-4fed-bd2d-63b0100e2d1a
+# ╠═82841686-b078-4ba2-b5ce-d748070437d2
+# ╠═8dded5c7-f4ea-4ee5-b0b9-59b21c7f3097
 # ╠═cb77a71b-7cba-489d-a51b-690cdd281a4c
-# ╠═e26f0ae5-4b0b-4886-a0ad-e109dbf9e321
-# ╠═dc9c5d21-87fc-404b-b8b7-1a704d890591
-# ╠═3eda9fc1-0d54-4cde-94ba-5e611a4773b6
+# ╠═b00f965a-18a1-4ccf-85a9-ae79d588cab6
 # ╠═0ae23619-0ce3-4e32-9a11-f9a444235c70
-# ╠═f64c9529-1f71-4daa-8f4e-6af000288b38
+# ╠═ddb9528f-b57c-4333-9347-8a56aa6890c4
 # ╠═c3067e6d-dfaf-4938-8bbf-4b51514fd286
 # ╠═a2f4c245-031b-4f1c-9f44-b3947cbc9795
 # ╠═ad7aac3b-303a-4ca6-a44f-f11cba8d115f
 # ╠═dbdcd6c4-102d-41cc-b218-100f74355b85
 # ╠═9d6334c1-7107-4fbb-b383-9a37fc56de74
 # ╠═07e9a417-5adb-4182-a98d-fd618feaf675
+# ╠═008512c1-3a44-42b4-8695-2a9f4d88ef01
 # ╠═2826e49a-5566-4aa7-be9a-73799dfbebc7
 # ╠═c79d0914-d0db-4f5c-b1f2-a6154d063e78
 # ╠═eaae76e1-9326-432a-8fc5-b03c3d93e75a
