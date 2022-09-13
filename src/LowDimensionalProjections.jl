@@ -36,7 +36,7 @@ function embed(M::MultivariateStats.PCA, F::AbstractArray, PCs::Union{Int, Vecto
     return D
 end
 
-export PCA
+# export PCA
 
 function embed(M::MultivariateStats.PCA, F::AbstractFeatureArray, PCs::Union{Int, Vector{Int64}, UnitRange}=1:length(M.prinvars); kwargs...)
     D = embed(M, Array(F), PCs; kwargs...)

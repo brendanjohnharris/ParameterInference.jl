@@ -1,6 +1,8 @@
 using Catch22
 using StatsBase
 
+Catch22.getnames(𝐟::Vector{<:Catch22.Features.AbstractFeature}) = Catch22.getname.(𝐟)
+
 catch2 = FeatureSet([StatsBase.mean, StatsBase.std], [:mean, :standard_deviation], [["distribution","centre"], ["distribution","spread"]], ["Arithmetic mean", "Sample standard deviation"])
 export catch2
 
@@ -72,4 +74,3 @@ function intersectFeatures(X, Y, Z, otherarrays...)
     return (X, otherarrays...)
 end
 export intersectFeatures
-

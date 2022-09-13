@@ -42,7 +42,7 @@ include("Windows.jl")
 include("DistributionTests.jl")
 include("Information.jl")
 include("BaselineFilter.jl")
-include("BoxCox.jl")
+# include("BoxCox.jl")
 include("TestBaselines.jl")
 
 Base.identity(x, y) = identity
