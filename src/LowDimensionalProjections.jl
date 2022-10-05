@@ -72,7 +72,7 @@ function featureweights(model::MultivariateStats.PCA, pc=1:outdim(model))
 end
 function featureweights(I::Inference, pc::Int=1)
     P = projection(I.model)
-    Catch22.featureVector(P[:, pc], val(dims(I.F̂, :feature)))
+    Catch22.FeatureVector(P[:, pc], val(dims(I.F̂, :feature)))
 end
 export featureweights
 

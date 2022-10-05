@@ -73,14 +73,14 @@ function intervalscale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
     if any(Catch22.featureDims(Fₗ) .!= Catch22.featureDims(Fₕ))
         error("High and low dimensional baselines do not have the same features")
     end
-    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
+    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
 end
 function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::AbstractFeatureMatrix,
     interval::Function=rampInterval)
     if size(Fₗ, 1) .!= size(Fₕ, 1)
         error("High and low dimensional baselines do not have the same features")
     end
-    return F -> reScale(F,  Catch22.featureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
+    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), Catch22.featureDims(F)))
 end
 export intervalscale
 
