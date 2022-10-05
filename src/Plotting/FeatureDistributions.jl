@@ -55,7 +55,7 @@ using StatsPlots
     end
 
     if F isa AbstractFeatureArray && F2 isa AbstractFeatureArray
-        fnames = replace.(String.(featureDims(F)),  '_'=>"\\_")
+        fnames = replace.(String.(getnames(F)),  '_'=>"\\_")
     else
         fnames = 1:size(F, 1)
     end
@@ -117,15 +117,15 @@ end
     yguide --> "Output Variance"
     left_margin --> 10Plots.mm
 
-    if any(featureDims(Fₗ) .!= featureDims(Fₕ))
+    if any(getnames(Fₗ) .!= getnames(Fₕ))
         error("High and low dimensional baselines do not have the same features")
     end
 
     𝛔ₗ, 𝛔ₕ = std(Fₗ, dims=2), std(Fₕ, dims=2)
     𝛔ₕ[𝛔ₕ .< 𝛔ₗ] .= Inf
-    fnames = featureDims(F)
+    fnames = getnames(F)
     𝐟 = interval.(Fₗ, Fₕ, F)
-    𝐟 = Catch22.FeatureVector(𝐟, featureDims(Fₗ))
+    𝐟 = Catch22.FeatureVector(𝐟, getnames(Fₗ))
     (F, 𝐟) = intersectFeatures(F, 𝐟)
 
     xx = -0.1:0.01:1.1

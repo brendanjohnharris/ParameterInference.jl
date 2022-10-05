@@ -92,7 +92,7 @@ using HypothesisTests
         clims := (-clim, clim)
         try
             println("The clustered features are:\n")
-            display.(featureDims(clusterF))
+            display.(getnames(clusterF))
         catch
             @warn "Could not display clustered features, probably because the feature matrix is not a FeatureMatrix"
         end
@@ -447,7 +447,7 @@ end
             clim = max(abs.(extrema(clusterF))...)
             clims := (-clim, clim)
             println("The clustered features are:")
-            display.(featureDims(clusterF))
+            display.(getnames(clusterF))
             print("\n")
             #clusterReorder(F, CorrDist(), linkageMetric=:average, branchOrder=:optimal, dim=1)
             (x, y, X) = (NonstationaryProcesses.timeDims(I.timeseries)[Int.(windowCentres)], 1:size(clusterF, 1), clusterF)

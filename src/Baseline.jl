@@ -70,17 +70,17 @@ function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::Array{Float64, 2},
 end
 function intervalscale(Fₗ::AbstractFeatureMatrix, Fₕ::AbstractFeatureMatrix,
     interval::Function=rampInterval)
-    if any(featureDims(Fₗ) .!= featureDims(Fₕ))
+    if any(getnames(Fₗ) .!= getnames(Fₕ))
         error("High and low dimensional baselines do not have the same features")
     end
-    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), featureDims(F)))
+    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), getnames(F)))
 end
 function intervalscale(Fₗ::Array{Float64, 2}, Fₕ::AbstractFeatureMatrix,
     interval::Function=rampInterval)
     if size(Fₗ, 1) .!= size(Fₕ, 1)
         error("High and low dimensional baselines do not have the same features")
     end
-    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), featureDims(F)))
+    return F -> reScale(F,  Catch22.FeatureVector(interval(Fₗ, Fₕ, F), getnames(F)))
 end
 export intervalscale
 
@@ -198,7 +198,7 @@ function lowbaseline(Fₗ::AbstractArray)
         𝛍ₗ = StatsBase.mean(F̂ₗ, dims=2)
         𝐟 = [x -> interval(σ)(StatsBase.std(x)) for σ ∈ 𝛔ₗ][:]
         if F isa AbstractFeatureArray
-            𝐟 = Catch22.FeatureVector(𝐟, featureDims(F̂ₗ))
+            𝐟 = Catch22.FeatureVector(𝐟, getnames(F̂ₗ))
         end
         return reScale(F̂, 𝐟)
     end
