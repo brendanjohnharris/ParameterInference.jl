@@ -3,13 +3,13 @@ import StatsBase.cov
 #          Run a pca on the (time series of a) feature matrix and plot the first two PC's          #
 # ------------------------------------------------------------------------------------------------ #
 @userplot LowDim2
-@recipe function f(h::LowDim2; method=principalcomponents, classlabels=false, features=Catch22.featureDims(h.args[1]))
+@recipe function f(h::LowDim2; method=principalcomponents, classlabels=false, features=featureDims(h.args[1]))
     # show(size(F))
     F = h.args[1]
     # if h.args > 1
     #     Fs = h.args[2:end]
     # end
-    fs = Catch22.featureDims(F)
+    fs = featureDims(F)
     seriestype := scatter
     M = project(standardise(Array(F)), method)
     F′ = embed(M, standardise(Array(F)), 1:2)
@@ -57,10 +57,10 @@ end
 
 
 @userplot LowDim3
-@recipe function f(h::LowDim3; method=principalcomponents, classlabels=true, features=Catch22.featureDims(h.args[1]))
+@recipe function f(h::LowDim3; method=principalcomponents, classlabels=true, features=featureDims(h.args[1]))
     # show(size(F))
     F = h.args[1]
-    fs = Catch22.featureDims(F)
+    fs = featureDims(F)
     seriestype := scatter
     M = project(standardise(Array(F)), method)
     F′ = embed(M, standardise(Array(F)), 1:3)

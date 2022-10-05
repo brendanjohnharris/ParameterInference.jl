@@ -49,14 +49,14 @@ using Tullio
         F = FI.args[2]
         x = FI.args[1]
         if F isa AbstractFeatureArray
-            y = string.(Catch22.featureDims(F))
+            y = string.(featureDims(F))
         else
             y = string.(1:size(F, 1))
         end
     elseif length(FI.args) == 1
         F = FI.args[1]
         if F isa AbstractFeatureArray
-            y = string.(Catch22.featureDims(F))
+            y = string.(featureDims(F))
         else
             y = string.(1:size(F, 1))
         end
@@ -91,7 +91,7 @@ end
     elseif length(DI.args) == 1
         F = DI.args[1]
         if F isa AbstractFeatureArray
-            f = string.(Catch22.featureDims(F))
+            f = string.(featureDims(F))
         else
             f = string.(1:size(F, 1))
         end

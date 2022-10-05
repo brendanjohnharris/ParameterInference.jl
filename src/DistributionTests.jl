@@ -21,7 +21,7 @@ function testFeatureDistributions(F₁::AbstractFeatureArray, F₂::AbstractFeat
     F̂₁, F̂₂ = intersectFeatures(F₁, F₂)
     p = testFeatureDistributions(Array(F̂₁), Array(F̂₂), test; tail=tail)
     F̂₁, p = intersectFeatures(F̂₁, p) # label p with the features of F̂₁
-    fs = Catch22.featureDims(F̂₁)
+    fs = featureDims(F̂₁)
     outp = deepcopy(F̂₁[:, 1])
     outp[:] .= NaN
     outp[fs] .= p[fs]

@@ -39,18 +39,18 @@ export featureRepresentation
 
 function NonstationaryProcesses.forcemat(x::AbstractFeatureArray)
     if x isa AbstractFeatureVector
-        x = Catch22.featureMatrix(forcemat(Array(x)), Catch22.featureDims(x))
+        x = Catch22.featureMatrix(forcemat(Array(x)), featureDims(x))
     end
     return x
 end
 
 function intersectFeatures(X::AbstractFeatureArray, Y::AbstractFeatureArray)
     # Will be stable in the order of features in X
-    fx, fy = Catch22.featureDims(X), Catch22.featureDims(Y)
+    fx, fy = featureDims(X), featureDims(Y)
     if any(.!in.(fx, (fy,)))
         error("The features of Y are neither the same as nor a superset of the features in X")
     end
-    fs = intersect(Catch22.featureDims(X), Catch22.featureDims(Y))
+    fs = intersect(featureDims(X), featureDims(Y))
     return (X[fs, :], forcemat(Y)[fs, :])
 end
 function intersectFeatures(X::AbstractFeatureArray, Y::Array)
@@ -58,7 +58,7 @@ function intersectFeatures(X::AbstractFeatureArray, Y::Array)
     if size(X, 1) != size(Y, 1)
         @error "X and Y do not have the same number of rows"
     end
-    fs = Catch22.featureDims(X)
+    fs = featureDims(X)
     Y = FeatureMatrix(Y, fs)
     return (X, Y)
 end

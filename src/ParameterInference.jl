@@ -32,6 +32,8 @@ Base.@kwdef struct Inference
 end
 export Inference
 
+featureDims(f) = dims(f, Dim{:feature})
+
 include("Baseline.jl")
 include("FeatureClustering.jl")
 include("FeatureRepresentations.jl")
